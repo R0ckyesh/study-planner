@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182338; --ink-soft:#4B5670;
+    --paper:#F7F3EA; --paper-line:#E1D9C6; --card:#FFFFFF;
+    --navy:#16324F; --teal:#0E7C86; --teal-soft:#DCEFEF;
+    --amber:#C98A2E; --rose:#C24E5C; --rose-soft:#F6DDE0;
+    --green:#2F8F5B; --green-soft:#DCEFDF;
+    --shadow:0 8px 24px rgba(22,50,79,0.10); --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background: radial-gradient(circle at 1px 1px, var(--paper-line) 1px, transparent 0) 0 0/22px 22px, var(--paper);
+    color:var(--ink); min-height:100vh; padding-bottom:60px;
+  }
+  .topbar{ background:linear-gradient(120deg,var(--navy),#1D4363); padding:26px 18px 0; color:#fff; }
+  .brand{ display:flex; align-items:baseline; gap:10px; max-width:1000px; margin:0 auto; padding:0 4px 18px; }
+  .brand h1{ font-family:'Fraunces',serif; font-weight:600; font-size:1.6rem; margin:0; }
+  .brand span{ font-size:0.78rem; color:#B9CBDD; font-family:'IBM Plex Mono',monospace; }
+  .tabs{ max-width:1000px; margin:0 auto; display:flex; gap:6px; padding:0 4px; }
+  .tab{
+    font-family:'Fraunces',serif; font-weight:600; font-size:0.9rem; color:#D9E4EE;
+    background:rgba(255,255,255,0.08); border:none; border-radius:10px 10px 0 0;
+    padding:12px 16px 14px; cursor:pointer; transform:translateY(6px);
+    transition:transform .15s ease, background .15s ease, color .15s ease;
+  }
+  .tab.active{ background:var(--paper); color:var(--navy); transform:translateY(0); box-shadow:var(--shadow); }
+  main{ max-width:1000px; margin:0 auto; padding:22px 14px 0; }
+  section.view{ display:none; }
+  section.view.active{ display:block; }
+  .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; margin-bottom:18px; }
+  .card h2{ font-family:'Fraunces',serif; font-size:1.1rem; margin:0 0 4px; color:var(--navy); }
+  .card .sub{ font-size:0.82rem; color:var(--ink-soft); margin:0 0 14px; }
+  button.pill{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem; border:none;
+    border-radius:999px; padding:9px 16px; cursor:pointer; transition:transform .08s ease, opacity .15s ease;
+  }
+  button.pill:active{ transform:scale(0.96); }
+  .pill-teal{ background:var(--teal); color:#fff; }
+  .pill-ghost{ background:var(--teal-soft); color:var(--teal); }
+  .pill-rose{ background:var(--rose-soft); color:var(--rose); }
+  .pill-nav{ background:var(--navy); color:#fff; padding:8px 14px; }
+
+  .week-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .week-range{ font-family:'IBM Plex Mono',monospace; font-size:0.9rem; color:var(--navy); font-weight:600; }
+  .week-nav-btns{ display:flex; gap:8px; }
+
+  .planner-scroll{ overflow-x:auto; border-radius:12px; border:1px solid var(--paper-line); max-height:70vh; overflow-y:auto; }
+  .planner-grid{ display:grid; grid-template-columns:64px repeat(7,94px); min-width:max-content; position:relative; }
+  .corner{
+    position:sticky; top:0; left:0; z-index:6; background:var(--navy);
+    border-right:2px solid rgba(255,255,255,0.15); border-bottom:1px solid rgba(255,255,255,0.15);
+  }
+  .daycolhead{
+    position:sticky; top:0; z-index:4; background:var(--navy); color:#fff; text-align:center;
+    padding:8px 4px; font-family:'Fraunces',serif; font-weight:600; font-size:0.78rem;
+    border-bottom:1px solid rgba(255,255,255,0.15);
+  }
+  .daycolhead.weekend{ background:#1D4363; }
+  .daycolhead .dnum{ display:block; font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:#B9CBDD; font-weight:500; }
+  .hourlabel{
+    position:sticky; left:0; z-index:3; background:var(--navy); color:#fff;
+    font-family:'IBM Plex Mono',monospace; font-size:0.68rem; display:flex; align-items:center;
+    justify-content:center; border-right:2px solid rgba(255,255,255,0.15); border-bottom:1px solid var(--paper-line);
+  }
+  .hourcell{ border-right:1px solid var(--paper-line); border-bottom:1px solid var(--paper-line); height:42px; cursor:pointer; background:#fff; transition:background .1s ease; }
+  .hourcell:hover{ background:var(--teal-soft); }
+  .hourcell.selected{ background:#BFE3E4; }
+  .hourcell.weekend{ background:#FCFAF5; }
+  .hourcell.weekend:hover{ background:var(--teal-soft); }
+  .donelabel{
+    position:sticky; left:0; z-index:3; background:var(--navy); color:#fff;
+    font-family:'Fraunces',serif; font-weight:600; font-size:0.7rem; display:flex; align-items:center; justify-content:center;
+    border-right:2px solid rgba(255,255,255,0.15);
+  }
+  .donecell{ border-right:1px solid var(--paper-line); display:flex; align-items:center; justify-content:center; background:var(--green-soft); }
+  .donecell input{ width:20px; height:20px; accent-color:var(--green); cursor:pointer; }
+  .block{
+    position:absolute; top:3px; bottom:3px; border-radius:7px; display:flex; align-items:center; justify-content:center;
+    font-size:0.72rem; font-weight:600; color:#fff; padding:0 6px; cursor:pointer; overflow:hidden;
+    white-space:nowrap; text-overflow:ellipsis; box-shadow:0 2px 5px rgba(0,0,0,0.15); z-index:1;
+  }
+  .selbar{
+    position:sticky; bottom:14px; display:none; justify-content:space-between; align-items:center; gap:10px;
+    background:var(--navy); color:#fff; border-radius:12px; padding:12px 16px; margin-top:14px; box-shadow:var(--shadow);
+  }
+  .selbar.show{ display:flex; }
+  .selbar span{ font-size:0.85rem; font-family:'IBM Plex Mono',monospace; }
+  .selbar-btns{ display:flex; gap:8px; }
+
+  .overall-progress{ display:flex; align-items:center; gap:14px; }
+  .bar-track{ flex:1; height:10px; border-radius:6px; background:var(--paper-line); overflow:hidden; }
+  .bar-fill{ height:100%; background:linear-gradient(90deg,var(--teal),var(--green)); width:0%; transition:width .25s ease; }
+  .overall-label{ font-family:'IBM Plex Mono',monospace; font-size:0.82rem; color:var(--navy); font-weight:600; white-space:nowrap; }
+
+  .subject-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+  .subject-card{ border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; }
+  .subject-head{ padding:14px 16px 10px; color:#fff; position:relative; }
+  .subject-head h3{ font-family:'Fraunces',serif; margin:0 0 8px; font-size:1.05rem; padding-right:24px; }
+  .subject-head .close-x{ position:absolute; top:12px; right:12px; background:rgba(255,255,255,0.2); border:none; color:#fff; width:22px; height:22px; border-radius:50%; cursor:pointer; font-size:0.85rem; }
+  .subject-head .mini-bar-track{ height:6px; border-radius:4px; background:rgba(255,255,255,0.3); overflow:hidden; }
+  .subject-head .mini-bar-fill{ height:100%; background:#fff; width:0%; transition:width .25s ease; }
+  .subject-head .mini-label{ font-family:'IBM Plex Mono',monospace; font-size:0.7rem; margin-top:5px; opacity:0.9; }
+  .subject-body{ padding:12px 14px 14px; flex:1; display:flex; flex-direction:column; }
+  .subject-body textarea{ width:100%; min-height:64px; border:1.4px solid var(--paper-line); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:0.85rem; resize:vertical; background:#FCFAF5; }
+  .add-topics-row{ display:flex; justify-content:flex-end; margin:6px 0 10px; }
+  ul.topic-list{ list-style:none; margin:0; padding:0; max-height:230px; overflow-y:auto; border-top:1px dashed var(--paper-line); }
+  ul.topic-list li{ display:flex; align-items:flex-start; gap:8px; padding:8px 2px; border-bottom:1px dashed var(--paper-line); }
+  ul.topic-list li input[type=checkbox]{ width:17px; height:17px; margin-top:2px; accent-color:var(--green); cursor:pointer; }
+  ul.topic-list li label{ flex:1; font-size:0.86rem; line-height:1.4; cursor:pointer; }
+  ul.topic-list li.done label{ text-decoration:line-through; color:#9aa3af; }
+  ul.topic-list li .del{ background:none; border:none; color:#c7cdd6; cursor:pointer; font-size:0.95rem; }
+  .topic-empty{ font-size:0.78rem; color:#9aa3af; padding:10px 2px; }
+  .add-subject-card{ border:2px dashed var(--paper-line); border-radius:var(--radius); display:flex; align-items:center; justify-content:center; min-height:140px; cursor:pointer; color:var(--teal); font-weight:600; font-family:'Fraunces',serif; }
+
+  .history-list{ list-style:none; margin:0; padding:0; }
+  .history-list li{ display:flex; justify-content:space-between; padding:8px 4px; border-bottom:1px dashed var(--paper-line); font-size:0.88rem; }
+  .history-list .hd{ font-family:'IBM Plex Mono',monospace; color:var(--ink-soft); }
+  .history-list .hc{ font-weight:700; color:var(--teal); }
+
+  .overlay{ display:none; position:fixed; inset:0; background:rgba(22,50,79,0.45); align-items:flex-end; justify-content:center; z-index:50; }
+  .overlay.show{ display:flex; }
+  .modal{ background:#fff; width:100%; max-width:420px; border-radius:16px 16px 0 0; padding:20px 20px 26px; }
+  @media (min-width:600px){ .overlay{ align-items:center; } .modal{ border-radius:16px; } }
+  .modal h3{ font-family:'Fraunces',serif; margin:0 0 12px; color:var(--navy); }
+  .modal input[type=text]{ width:100%; border:1.4px solid var(--paper-line); border-radius:8px; padding:10px 12px; font-size:0.9rem; font-family:inherit; margin-bottom:12px; }
+  .color-row{ display:flex; gap:8px; margin-bottom:16px; }
+  .color-dot{ width:28px; height:28px; border-radius:50%; cursor:pointer; border:3px solid transparent; }
+  .color-dot.selected{ border-color:var(--navy); }
+  .modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
+  footer{ text-align:center; font-size:0.72rem; color:#9aa3af; margin-top:26px; }
+  .status-msg{ font-size:0.78rem; color:var(--ink-soft); text-align:center; padding:8px; }
+  .pill.mode-active{ background:var(--navy); color:#fff; }
+  .pill.mode-inactive{ background:var(--teal-soft); color:var(--teal); }
+
+  .month-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .month-dow{ text-align:center; font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:var(--ink-soft); padding:4px 0; }
+  .month-day{
+    min-height:64px; border-radius:8px; background:#fff; border:1px solid var(--paper-line);
+    padding:6px; cursor:pointer; display:flex; flex-direction:column; gap:4px; transition:background .1s ease;
+  }
+  .month-day:hover{ background:var(--teal-soft); }
+  .month-day.today{ border-color:var(--teal); border-width:2px; }
+  .month-day.outside{ opacity:0.35; }
+  .month-daynum{ font-family:'IBM Plex Mono',monospace; font-size:0.78rem; font-weight:600; color:var(--navy); }
+  .month-dots{ display:flex; gap:3px; flex-wrap:wrap; }
+  .month-dot{ width:7px; height:7px; border-radius:50%; }
+  .month-more{ font-size:0.65rem; color:var(--ink-soft); }
+
+  .field-row{ display:flex; gap:8px; margin-bottom:12px; }
+  .field-row > div{ flex:1; }
+  .field-row label{ display:block; font-size:0.72rem; color:var(--ink-soft); margin-bottom:4px; font-family:'IBM Plex Mono',monospace; }
+  .field-row input, .field-row select{ width:100%; border:1.4px solid var(--paper-line); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:0.85rem; }
+  .repeat-row{ display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:0.85rem; color:var(--ink-soft); }
+  .repeat-row input[type=number]{ width:60px; border:1.4px solid var(--paper-line); border-radius:8px; padding:6px 8px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <h1>Study Planner</h1>
+    <span>live calendar &middot; syllabus tracker &middot; history</span>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-planner" onclick="showTab('planner')">&#128197; Weekly Planner</button>
+    <button class="tab" id="tab-syllabus" onclick="showTab('syllabus')">&#128218; Syllabus Tracker</button>
+    <button class="tab" id="tab-history" onclick="showTab('history')">&#128202; History</button>
+  </div>
+</div>
+
+<main>
+  <section class="view active" id="view-planner">
+    <div class="card">
+      <div class="week-nav">
+        <button class="pill pill-nav" onclick="shiftView(-1)">&larr; Prev</button>
+        <div class="week-range" id="week-range">Loading...</div>
+        <div class="week-nav-btns">
+          <button class="pill pill-ghost" onclick="goToday()">Today</button>
+          <button class="pill pill-nav" onclick="shiftView(1)">Next &rarr;</button>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:14px;">
+        <button class="pill" id="mode-week-btn" onclick="setMode('week')">Week</button>
+        <button class="pill" id="mode-month-btn" onclick="setMode('month')">Month</button>
+      </div>
+      <p class="sub" id="planner-hint">Tap an hour to select it, tap more hours in the same row to extend the range, then add a task. Tap a block to edit, reschedule, or delete it.</p>
+
+      <div class="planner-scroll" id="week-wrap"><div class="planner-grid" id="planner-grid"></div></div>
+      <div class="month-grid" id="month-grid" style="display:none;"></div>
+
+      <div class="selbar" id="selbar">
+        <span id="selbar-text">0 hours selected</span>
+        <div class="selbar-btns">
+          <button class="pill pill-ghost" onclick="clearSelection()">Clear</button>
+          <button class="pill pill-teal" onclick="openBlockModal()">Add Task</button>
+        </div>
+      </div>
+      <div class="status-msg" id="planner-status"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-syllabus">
+    <div class="card">
+      <h2>Overall Progress</h2>
+      <div class="overall-progress">
+        <div class="bar-track"><div class="bar-fill" id="overall-fill"></div></div>
+        <div class="overall-label" id="overall-label">0 / 0 topics</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Bulk Import Syllabus</h2>
+      <p class="sub">Paste your whole syllabus &mdash; multiple subjects at once. It auto-splits into separate checklists.
+        Put a <strong>blank line between subjects</strong> (the first line of each block becomes the subject name),
+        or force a subject break anywhere with a line starting with <strong>#</strong>.</p>
+      <textarea id="bulk-input" style="width:100%; min-height:160px; border:1.4px solid var(--paper-line); border-radius:8px; padding:10px 12px; font-family:inherit; font-size:0.88rem; resize:vertical; background:#FCFAF5;" placeholder="DBMS
+Normalization (1NF-BCNF)
+ER Diagrams
+Transactions &amp; Concurrency
+
+SQL
+Joins &amp; Subqueries
+Indexing
+
+# Operating Systems
+Process Scheduling
+Deadlocks"></textarea>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; flex-wrap:wrap; gap:8px;">
+        <span id="bulk-preview" class="status-msg" style="padding:0;"></span>
+        <button class="pill pill-teal" onclick="importBulkSyllabus()">Import &amp; Segregate</button>
+      </div>
+    </div>
+
+    <div class="subject-grid" id="subject-grid">
+      <div class="add-subject-card" onclick="openSubjectModal()">+ Add Single Subject</div>
+    </div>
+  </section>
+
+  <section class="view" id="view-history">
+    <div class="card">
+      <h2>Completion History</h2>
+      <p class="sub">Every topic and task you mark done is timestamped, so this always reflects real history.</p>
+      <ul class="history-list" id="history-list"></ul>
+    </div>
+  </section>
+</main>
+
+<footer>Data is stored in PostgreSQL via the FastAPI backend &mdash; it persists across sessions and devices.</footer>
+
+<div class="overlay" id="block-overlay">
+  <div class="modal">
+    <h3 id="block-modal-title">Add Task</h3>
+    <input type="text" id="block-label-input" placeholder="e.g. Study: DBMS, Gym, Class">
+    <div class="color-row" id="block-color-row"></div>
+
+    <div class="field-row" id="reschedule-row" style="display:none;">
+      <div>
+        <label>Date</label>
+        <input type="date" id="block-date-input">
+      </div>
+      <div>
+        <label>Start</label>
+        <select id="block-start-input"></select>
+      </div>
+      <div>
+        <label>End</label>
+        <select id="block-end-input"></select>
+      </div>
+    </div>
+
+    <div class="repeat-row" id="repeat-row">
+      <label style="display:flex; align-items:center; gap:6px; font-family:inherit;">
+        <input type="checkbox" id="repeat-checkbox"> Repeat weekly for
+      </label>
+      <input type="number" id="repeat-weeks-input" value="12" min="2" max="52"> weeks
+    </div>
+
+    <div class="modal-actions" id="block-modal-actions">
+      <button class="pill pill-rose" id="block-delete-btn" style="display:none;" onclick="deleteBlock('this')">Delete</button>
+      <button class="pill pill-rose" id="block-delete-future-btn" style="display:none;" onclick="deleteBlock('future')">Delete future</button>
+      <button class="pill pill-ghost" onclick="closeBlockModal()">Cancel</button>
+      <button class="pill pill-teal" onclick="saveBlock()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="subject-overlay">
+  <div class="modal">
+    <h3>Add Subject</h3>
+    <input type="text" id="subject-name-input" placeholder="e.g. DBMS, Operating Systems, SQL">
+    <div class="color-row" id="subject-color-row"></div>
+    <div class="modal-actions">
+      <button class="pill pill-ghost" onclick="closeSubjectModal()">Cancel</button>
+      <button class="pill pill-teal" onclick="saveSubject()">Create</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = ''; // same origin as the backend
+const DAY_ABBR = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+const START_HOUR = 5, END_HOUR = 23, NUM_SLOTS = END_HOUR - START_HOUR + 1;
+const PALETTE = ["#0E7C86","#C98A2E","#C24E5C","#2F8F5B","#6C63B5","#3B7DBF"];
+
+let weekStart = startOfWeek(new Date());
+let monthCursor = startOfMonth(new Date());
+let viewMode = 'week'; // 'week' | 'month'
+let events = [];               // events for the current visible week (from API)
+let monthEvents = [];           // events for the current visible month (for dots)
+let selection = { day:null, hours:new Set() };
+let editingEventId = null;
+let pendingBlockColor = PALETTE[0];
+let subjects = [];
+let pendingSubjectColor = PALETTE[0];
+
+function startOfMonth(d){ const r=new Date(d); r.setDate(1); r.setHours(0,0,0,0); return r; }
+function addMonths(d,n){ const r=new Date(d); r.setMonth(r.getMonth()+n); return r; }
+
+function startOfWeek(d){
+  const date = new Date(d);
+  const day = date.getDay(); // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day; // make Monday the start
+  date.setDate(date.getDate() + diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+function fmtISO(d){ return d.toISOString().slice(0,10); }
+function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function fmtRange(start){
+  const end = addDays(start,6);
+  const opts = { month:'short', day:'numeric' };
+  return `${start.toLocaleDateString(undefined,opts)} \u2013 ${end.toLocaleDateString(undefined,{...opts, year:'numeric'})}`;
+}
+
+function showTab(name){
+  ['planner','syllabus','history'].forEach(n=>{
+    document.getElementById('view-'+n).classList.toggle('active', n===name);
+    document.getElementById('tab-'+n).classList.toggle('active', n===name);
+  });
+  if(name==='history') loadHistory();
+}
+
+/* ---------------- Weekly planner ---------------- */
+function hourLabel(h){ const hr12 = h%12===0?12:h%12; return hr12+(h<12?'a':'p'); }
+
+function setMode(mode){
+  viewMode = mode;
+  document.getElementById('mode-week-btn').className = 'pill ' + (mode==='week' ? 'mode-active' : 'mode-inactive');
+  document.getElementById('mode-month-btn').className = 'pill ' + (mode==='month' ? 'mode-active' : 'mode-inactive');
+  document.getElementById('week-wrap').style.display = mode==='week' ? 'block' : 'none';
+  document.getElementById('month-grid').style.display = mode==='month' ? 'grid' : 'none';
+  document.getElementById('selbar').classList.toggle('show', mode==='week' && selection.hours.size>0);
+  document.getElementById('planner-hint').textContent = mode==='week'
+    ? 'Tap an hour to select it, tap more hours in the same row to extend the range, then add a task. Tap a block to edit, reschedule, or delete it.'
+    : 'Tap a day to open its week view. Dots show tasks scheduled that day.';
+  if(mode==='month') loadMonth(); else loadWeek();
+}
+
+function shiftView(n){
+  if(viewMode==='week'){ shiftWeek(n); } else { shiftMonth(n); }
+}
+
+async function loadWeek(){
+  document.getElementById('week-range').textContent = fmtRange(weekStart);
+  const start = fmtISO(weekStart), end = fmtISO(addDays(weekStart,6));
+  setStatus('planner-status','Loading...');
+  try{
+    const res = await fetch(`${API}/api/events?start=${start}&end=${end}`);
+    events = await res.json();
+    setStatus('planner-status','');
+  }catch(e){
+    setStatus('planner-status','Could not reach the backend — is the server running?');
+  }
+  buildPlannerGrid();
+}
+
+function shiftWeek(n){ weekStart = addDays(weekStart, n*7); clearSelectionLocal(); loadWeek(); }
+function goToday(){
+  weekStart = startOfWeek(new Date());
+  monthCursor = startOfMonth(new Date());
+  clearSelectionLocal();
+  if(viewMode==='month') loadMonth(); else loadWeek();
+}
+
+function setStatus(id, msg){ document.getElementById(id).textContent = msg; }
+
+/* ---------------- Month view ---------------- */
+function monthGridRange(){
+  const first = startOfMonth(monthCursor);
+  const gridStart = startOfWeek(first);
+  const gridEnd = addDays(gridStart, 41); // 6 rows of 7
+  return { gridStart, gridEnd };
+}
+
+function shiftMonth(n){ monthCursor = addMonths(monthCursor, n); loadMonth(); }
+
+async function loadMonth(){
+  const { gridStart, gridEnd } = monthGridRange();
+  document.getElementById('week-range').textContent = monthCursor.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+  setStatus('planner-status','Loading...');
+  try{
+    const res = await fetch(`${API}/api/events?start=${fmtISO(gridStart)}&end=${fmtISO(gridEnd)}`);
+    monthEvents = await res.json();
+    setStatus('planner-status','');
+  }catch(e){
+    monthEvents = [];
+    setStatus('planner-status','Could not reach the backend — is the server running?');
+  }
+  buildMonthGrid();
+}
+
+function buildMonthGrid(){
+  const grid = document.getElementById('month-grid');
+  grid.innerHTML = '';
+  const { gridStart } = monthGridRange();
+  const todayISO = fmtISO(new Date());
+  const dowNames = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+
+  dowNames.forEach(d=>{
+    const h = document.createElement('div'); h.className='month-dow'; h.textContent = d;
+    grid.appendChild(h);
+  });
+
+  for(let i=0;i<42;i++){
+    const date = addDays(gridStart, i);
+    const iso = fmtISO(date);
+    const cell = document.createElement('div');
+    cell.className = 'month-day' + (iso===todayISO ? ' today' : '') + (date.getMonth()!==monthCursor.getMonth() ? ' outside' : '');
+
+    const num = document.createElement('div'); num.className='month-daynum'; num.textContent = date.getDate();
+    cell.appendChild(num);
+
+    const dayEvents = monthEvents.filter(e=>e.date===iso);
+    if(dayEvents.length){
+      const dots = document.createElement('div'); dots.className='month-dots';
+      dayEvents.slice(0,4).forEach(ev=>{
+        const dot = document.createElement('span'); dot.className='month-dot'; dot.style.background=ev.color;
+        dots.appendChild(dot);
+      });
+      cell.appendChild(dots);
+      if(dayEvents.length>4){
+        const more=document.createElement('div'); more.className='month-more'; more.textContent=`+${dayEvents.length-4} more`;
+        cell.appendChild(more);
+      }
+    }
+
+    cell.addEventListener('click', ()=>{
+      weekStart = startOfWeek(date);
+      setMode('week');
+    });
+    grid.appendChild(cell);
+  }
+}
+
+function buildPlannerGrid(){
+  const grid = document.getElementById('planner-grid');
+  grid.innerHTML = '';
+
+  // header row: corner + 7 day columns
+  const corner = document.createElement('div');
+  corner.className = 'corner';
+  grid.appendChild(corner);
+
+  const dayDates = [];
+  for(let dIdx=0; dIdx<7; dIdx++){
+    const date = addDays(weekStart, dIdx);
+    dayDates.push(date);
+    const isWeekend = dIdx >= 5; // Sat, Sun (Mon-start week)
+    const head = document.createElement('div');
+    head.className = 'daycolhead' + (isWeekend ? ' weekend' : '');
+    head.innerHTML = `${DAY_ABBR[date.getDay()]}<span class="dnum">${date.getDate()} ${date.toLocaleDateString(undefined,{month:'short'})}</span>`;
+    grid.appendChild(head);
+  }
+
+  // one row per hour
+  for(let i=0;i<NUM_SLOTS;i++){
+    const h = START_HOUR + i;
+    const hourLbl = document.createElement('div');
+    hourLbl.className = 'hourlabel';
+    hourLbl.textContent = hourLabel(h);
+    grid.appendChild(hourLbl);
+
+    for(let dIdx=0; dIdx<7; dIdx++){
+      const iso = fmtISO(dayDates[dIdx]);
+      const isWeekend = dIdx >= 5;
+      const cell = document.createElement('div');
+      cell.className = 'hourcell' + (isWeekend ? ' weekend' : '');
+      if(selection.day === iso && selection.hours.has(h)) cell.classList.add('selected');
+      cell.addEventListener('click', () => onCellTap(iso, h));
+      grid.appendChild(cell);
+    }
+  }
+
+  // done row
+  const doneLbl = document.createElement('div');
+  doneLbl.className = 'donelabel';
+  doneLbl.textContent = '\u2713 Done';
+  grid.appendChild(doneLbl);
+
+  for(let dIdx=0; dIdx<7; dIdx++){
+    const iso = fmtISO(dayDates[dIdx]);
+    const dayEvents = events.filter(e => e.date === iso);
+    const allDone = dayEvents.length > 0 && dayEvents.every(e => e.done);
+    const doneCell = document.createElement('div'); doneCell.className='donecell';
+    const chk = document.createElement('input'); chk.type='checkbox'; chk.checked = allDone;
+    chk.addEventListener('change', () => markDayDone(iso, chk.checked));
+    doneCell.appendChild(chk);
+    grid.appendChild(doneCell);
+  }
+
+  positionBlocks();
+}
+
+async function markDayDone(iso, done){
+  const dayEvents = events.filter(e => e.date === iso);
+  for(const ev of dayEvents){
+    await fetch(`${API}/api/events/${ev.id}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({done})
+    });
+  }
+  loadWeek();
+}
+
+function positionBlocks(){
+  const grid = document.getElementById('planner-grid');
+  const timeColW = 64, dayColW = 94, rowH = 42;
+  const firstCell = grid.querySelector('.hourcell');
+  if(!firstCell) return;
+  const baseTop = firstCell.offsetTop;
+  grid.style.position = 'relative';
+
+  events.forEach(ev => {
+    const dIdx = [0,1,2,3,4,5,6].find(i => fmtISO(addDays(weekStart,i)) === ev.date);
+    if(dIdx === undefined) return;
+    const div = document.createElement('div');
+    div.className = 'block';
+    div.style.left = (timeColW + dIdx*dayColW + 2) + 'px';
+    div.style.width = (dayColW - 4) + 'px';
+    div.style.top = (baseTop + (ev.start_hour - START_HOUR)*rowH + 2) + 'px';
+    div.style.height = ((ev.end_hour - ev.start_hour + 1)*rowH - 4) + 'px';
+    div.style.background = ev.color;
+    div.textContent = ev.label + (ev.done ? ' \u2713' : '');
+    div.style.opacity = ev.done ? '0.55' : '1';
+    div.addEventListener('click', (e)=>{ e.stopPropagation(); openBlockModal(ev.id); });
+    grid.appendChild(div);
+  });
+}
+
+function onCellTap(iso, hour){
+  if(selection.day !== iso){
+    selection.day = iso; selection.hours = new Set([hour]);
+  } else if(selection.hours.has(hour) && selection.hours.size===1){
+    selection.hours.clear(); selection.day = null;
+  } else {
+    const vals = [...selection.hours, hour];
+    const min=Math.min(...vals), max=Math.max(...vals);
+    selection.hours = new Set();
+    for(let h=min;h<=max;h++) selection.hours.add(h);
+  }
+  buildPlannerGrid(); updateSelbar();
+}
+function clearSelectionLocal(){ selection.day=null; selection.hours=new Set(); }
+function clearSelection(){ clearSelectionLocal(); buildPlannerGrid(); updateSelbar(); }
+
+function updateSelbar(){
+  const bar = document.getElementById('selbar'), text = document.getElementById('selbar-text');
+  if(selection.hours.size===0){ bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  const hrs = [...selection.hours].sort((a,b)=>a-b);
+  text.textContent = `${selection.day}: ${hourLabel(hrs[0])}\u2013${hourLabel(hrs[hrs.length-1])} (${hrs.length}h)`;
+}
+
+function buildColorRow(containerId, onPick, selectedColor){
+  const row = document.getElementById(containerId); row.innerHTML='';
+  PALETTE.forEach(c=>{
+    const dot=document.createElement('div');
+    dot.className='color-dot'+(c===selectedColor?' selected':'');
+    dot.style.background=c;
+    dot.addEventListener('click',()=>{
+      row.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));
+      dot.classList.add('selected'); onPick(c);
+    });
+    row.appendChild(dot);
+  });
+}
+
+function populateHourSelect(selectEl){
+  selectEl.innerHTML = '';
+  for(let h=START_HOUR; h<=END_HOUR; h++){
+    const opt = document.createElement('option'); opt.value=h; opt.textContent=hourLabel(h);
+    selectEl.appendChild(opt);
+  }
+}
+
+function openBlockModal(eventId){
+  const overlay=document.getElementById('block-overlay');
+  const title=document.getElementById('block-modal-title');
+  const input=document.getElementById('block-label-input');
+  const delBtn=document.getElementById('block-delete-btn');
+  const delFutureBtn=document.getElementById('block-delete-future-btn');
+  const reschedRow=document.getElementById('reschedule-row');
+  const repeatRow=document.getElementById('repeat-row');
+  const dateInput=document.getElementById('block-date-input');
+  const startInput=document.getElementById('block-start-input');
+  const endInput=document.getElementById('block-end-input');
+
+  populateHourSelect(startInput);
+  populateHourSelect(endInput);
+
+  if(eventId){
+    editingEventId = eventId;
+    const ev = events.find(e=>e.id===eventId) || monthEvents.find(e=>e.id===eventId);
+    title.textContent='Edit Task'; input.value=ev.label; pendingBlockColor=ev.color;
+    delBtn.style.display='inline-block';
+    delFutureBtn.style.display = ev.recurrence_group_id ? 'inline-block' : 'none';
+    reschedRow.style.display='flex';
+    repeatRow.style.display='none';
+    dateInput.value = ev.date;
+    startInput.value = ev.start_hour;
+    endInput.value = ev.end_hour;
+  } else {
+    if(selection.hours.size===0) return;
+    editingEventId=null; title.textContent='Add Task'; input.value=''; pendingBlockColor=PALETTE[0];
+    delBtn.style.display='none';
+    delFutureBtn.style.display='none';
+    reschedRow.style.display='none';
+    repeatRow.style.display='flex';
+    document.getElementById('repeat-checkbox').checked=false;
+    document.getElementById('repeat-weeks-input').value=12;
+  }
+  buildColorRow('block-color-row',(c)=>{pendingBlockColor=c;},pendingBlockColor);
+  overlay.classList.add('show'); setTimeout(()=>input.focus(),50);
+}
+function closeBlockModal(){ document.getElementById('block-overlay').classList.remove('show'); }
+
+async function saveBlock(){
+  const label = document.getElementById('block-label-input').value.trim();
+  if(!label) return;
+  if(editingEventId){
+    const date = document.getElementById('block-date-input').value;
+    const start_hour = parseInt(document.getElementById('block-start-input').value,10);
+    const end_hour = parseInt(document.getElementById('block-end-input').value,10);
+    if(end_hour < start_hour){ alert('End time must be after start time.'); return; }
+    await fetch(`${API}/api/events/${editingEventId}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({label, color: pendingBlockColor, date, start_hour, end_hour})
+    });
+  } else {
+    const hrs=[...selection.hours].sort((a,b)=>a-b);
+    const repeat_weekly = document.getElementById('repeat-checkbox').checked;
+    const repeat_weeks = parseInt(document.getElementById('repeat-weeks-input').value,10) || 12;
+    await fetch(`${API}/api/events`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        date: selection.day, start_hour: hrs[0], end_hour: hrs[hrs.length-1],
+        label, color: pendingBlockColor, repeat_weekly, repeat_weeks
+      })
+    });
+  }
+  clearSelectionLocal(); closeBlockModal();
+  if(viewMode==='month') loadMonth(); else loadWeek();
+}
+async function deleteBlock(scope){
+  if(editingEventId){ await fetch(`${API}/api/events/${editingEventId}?scope=${scope}`, {method:'DELETE'}); }
+  closeBlockModal();
+  if(viewMode==='month') loadMonth(); else loadWeek();
+}
+
+/* ---------------- Syllabus ---------------- */
+function openSubjectModal(){
+  document.getElementById('subject-name-input').value='';
+  pendingSubjectColor = PALETTE[subjects.length % PALETTE.length];
+  buildColorRow('subject-color-row',(c)=>{pendingSubjectColor=c;},pendingSubjectColor);
+  document.getElementById('subject-overlay').classList.add('show');
+  setTimeout(()=>document.getElementById('subject-name-input').focus(),50);
+}
+function closeSubjectModal(){ document.getElementById('subject-overlay').classList.remove('show'); }
+
+async function saveSubject(){
+  const name=document.getElementById('subject-name-input').value.trim();
+  if(!name) return;
+  await fetch(`${API}/api/subjects`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name, color: pendingSubjectColor})
+  });
+  closeSubjectModal(); loadSubjects();
+}
+async function deleteSubject(id){
+  if(!confirm('Delete this subject and its checklist?')) return;
+  await fetch(`${API}/api/subjects/${id}`, {method:'DELETE'});
+  loadSubjects();
+}
+async function addTopicsFromTextarea(subjectId, textarea){
+  const lines = textarea.value.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  if(lines.length===0) return;
+  await fetch(`${API}/api/subjects/${subjectId}/topics`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({lines})
+  });
+  textarea.value=''; loadSubjects();
+}
+async function toggleTopic(topicId, done){
+  await fetch(`${API}/api/topics/${topicId}?done=${done}`, {method:'PUT'});
+  loadSubjects();
+}
+async function removeTopic(topicId){
+  await fetch(`${API}/api/topics/${topicId}`, {method:'DELETE'});
+  loadSubjects();
+}
+
+async function loadSubjects(){
+  try{
+    const res = await fetch(`${API}/api/subjects`);
+    subjects = await res.json();
+  }catch(e){ subjects = []; }
+  renderSubjects();
+}
+
+function renderSubjects(){
+  const grid = document.getElementById('subject-grid');
+  grid.innerHTML='';
+  subjects.forEach(subject=>{
+    const total = subject.topics.length;
+    const done = subject.topics.filter(t=>t.done).length;
+    const pct = total ? Math.round((done/total)*100) : 0;
+
+    const card = document.createElement('div'); card.className='subject-card';
+    const head = document.createElement('div'); head.className='subject-head'; head.style.background=subject.color;
+    head.innerHTML = `
+      <button class="close-x" title="Delete subject">&times;</button>
+      <h3>${escapeHtml(subject.name)}</h3>
+      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+      <div class="mini-label">${done} / ${total} topics complete</div>`;
+    head.querySelector('.close-x').addEventListener('click',()=>deleteSubject(subject.id));
+    card.appendChild(head);
+
+    const body = document.createElement('div'); body.className='subject-body';
+    const ta = document.createElement('textarea'); ta.placeholder='Paste topics for '+subject.name+', one per line';
+    body.appendChild(ta);
+    const addRow = document.createElement('div'); addRow.className='add-topics-row';
+    const addBtn = document.createElement('button'); addBtn.className='pill pill-teal'; addBtn.textContent='+ Add Topics';
+    addBtn.addEventListener('click',()=>addTopicsFromTextarea(subject.id, ta));
+    addRow.appendChild(addBtn); body.appendChild(addRow);
+
+    const list = document.createElement('ul'); list.className='topic-list';
+    if(total===0){
+      const empty=document.createElement('div'); empty.className='topic-empty';
+      empty.textContent='No topics yet — paste the syllabus above and click Add Topics.';
+      list.appendChild(empty);
+    } else {
+      subject.topics.forEach(topic=>{
+        const li=document.createElement('li'); if(topic.done) li.classList.add('done');
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=topic.done;
+        cb.addEventListener('change',()=>toggleTopic(topic.id, cb.checked));
+        const lbl=document.createElement('label'); lbl.textContent=topic.text;
+        const del=document.createElement('button'); del.className='del'; del.innerHTML='&times;';
+        del.addEventListener('click',()=>removeTopic(topic.id));
+        li.appendChild(cb); li.appendChild(lbl); li.appendChild(del);
+        list.appendChild(li);
+      });
+    }
+    body.appendChild(list); card.appendChild(body); grid.appendChild(card);
+  });
+
+  const addCard=document.createElement('div'); addCard.className='add-subject-card'; addCard.textContent='+ Add Subject';
+  addCard.addEventListener('click', openSubjectModal);
+  grid.appendChild(addCard);
+
+  let total=0, done=0;
+  subjects.forEach(s=>{ total+=s.topics.length; done+=s.topics.filter(t=>t.done).length; });
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('overall-fill').style.width = pct+'%';
+  document.getElementById('overall-label').textContent = `${done} / ${total} topics`;
+}
+
+/* ---------------- History ---------------- */
+async function loadHistory(){
+  const list = document.getElementById('history-list');
+  list.innerHTML = '<li class="hd">Loading...</li>';
+  try{
+    const res = await fetch(`${API}/api/history?days=30`);
+    const data = await res.json();
+    const dates = new Set([...Object.keys(data.topics_completed), ...Object.keys(data.events_completed)]);
+    const sorted = [...dates].sort().reverse();
+    list.innerHTML='';
+    if(sorted.length===0){
+      list.innerHTML = '<li class="hd">No completions logged yet — mark a task or topic done to start building history.</li>';
+      return;
+    }
+    sorted.forEach(d=>{
+      const topics = data.topics_completed[d] || 0;
+      const evs = data.events_completed[d] || 0;
+      const li=document.createElement('li');
+      li.innerHTML = `<span class="hd">${d}</span><span class="hc">${topics} topics &middot; ${evs} tasks done</span>`;
+      list.appendChild(li);
+    });
+  }catch(e){
+    list.innerHTML = '<li class="hd">Could not reach the backend.</li>';
+  }
+}
+
+function escapeHtml(str){ const div=document.createElement('div'); div.textContent=str; return div.innerHTML; }
+
+/* ---------------- Bulk import (auto-segregate into subjects) ---------------- */
+function parseBulkSyllabus(text){
+  const rawLines = text.split('\n');
+  const segments = [];
+  let current = null;
+  let sawBlank = true; // true at start so the first line always starts a subject
+
+  rawLines.forEach(rawLine => {
+    const line = rawLine.trim();
+    if(line === ''){ sawBlank = true; return; }
+
+    const isExplicitHeader = /^#{1,3}\s+/.test(line);
+    const isNewHeader = isExplicitHeader || sawBlank || current === null;
+    const cleanLine = line.replace(/^#{1,3}\s+/, '').replace(/:$/, '');
+
+    if(isNewHeader){
+      current = { subjectName: cleanLine, topics: [] };
+      segments.push(current);
+    } else {
+      current.topics.push(line);
+    }
+    sawBlank = false;
+  });
+
+  return segments.filter(s => s.subjectName && s.topics.length > 0);
+}
+
+document.getElementById('bulk-input').addEventListener('input', (e)=>{
+  const segments = parseBulkSyllabus(e.target.value);
+  const preview = document.getElementById('bulk-preview');
+  if(segments.length === 0){ preview.textContent=''; return; }
+  preview.textContent = `Will create/update ${segments.length} subject(s): ` +
+    segments.map(s=>`${s.subjectName} (${s.topics.length})`).join(', ');
+});
+
+async function importBulkSyllabus(){
+  const textarea = document.getElementById('bulk-input');
+  const segments = parseBulkSyllabus(textarea.value);
+  if(segments.length === 0) return;
+
+  setStatus('planner-status',''); // no-op, just reuse pattern
+  const preview = document.getElementById('bulk-preview');
+  preview.textContent = 'Importing...';
+
+  for(const seg of segments){
+    let subject = subjects.find(s => s.name.trim().toLowerCase() === seg.subjectName.trim().toLowerCase());
+    if(!subject){
+      const color = PALETTE[subjects.length % PALETTE.length];
+      const res = await fetch(`${API}/api/subjects`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ name: seg.subjectName, color })
+      });
+      subject = await res.json();
+      subjects.push(subject);
+    }
+    await fetch(`${API}/api/subjects/${subject.id}/topics`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ lines: seg.topics })
+    });
+  }
+
+  textarea.value = '';
+  preview.textContent = `Imported ${segments.length} subject(s).`;
+  loadSubjects();
+}
+
+
+document.getElementById('mode-week-btn').className = 'pill mode-active';
+document.getElementById('mode-month-btn').className = 'pill mode-inactive';
+loadWeek();
+loadSubjects();
+window.addEventListener('resize', positionBlocks);
+</script>
+</body>
+</html>
