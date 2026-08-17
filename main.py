@@ -1,13 +1,16 @@
 import base64
 import datetime
+import hashlib
+import hmac
 import os
 import secrets
+import time
 import uuid
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -28,12 +31,93 @@ app.add_middleware(
 )
 
 # ============================================================
-# Simple password gate (HTTP Basic Auth)
+# Password gate — real login page + signed session cookie.
 # Set APP_PASSWORD as an environment variable to enable it.
 # Leave it unset to run with no password (e.g. while developing locally).
 # ============================================================
 APP_USERNAME = os.getenv("APP_USERNAME", "admin")
 APP_PASSWORD = os.getenv("APP_PASSWORD")  # None = auth disabled
+SESSION_SECRET = os.getenv("SESSION_SECRET", hashlib.sha256((APP_PASSWORD or "dev-secret").encode()).hexdigest())
+SESSION_COOKIE = "sp_session"
+SESSION_MAX_AGE = 60 * 60 * 24 * 30  # 30 days
+
+LOGIN_PAGE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in &mdash; Study Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    font-family:'Inter',system-ui,sans-serif; background:#F7F3EA; color:#1E293B;
+    background-image: radial-gradient(circle at 1px 1px, #E4DCC8 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+  .card{
+    background:#fff; border-radius:16px; box-shadow:0 8px 24px rgba(22,50,79,0.12);
+    padding:36px 32px; width:100%; max-width:360px;
+  }
+  h1{ font-family:'Fraunces',serif; font-size:1.5rem; margin:0 0 6px; color:#16324F; text-align:center; }
+  p.sub{ text-align:center; color:#64748B; font-size:0.85rem; margin:0 0 24px; }
+  label{ display:block; font-size:0.78rem; color:#64748B; margin-bottom:5px; font-weight:600; }
+  input{
+    width:100%; border:1.4px solid #E4DCC8; border-radius:8px; padding:11px 12px;
+    font-size:0.95rem; font-family:inherit; margin-bottom:16px;
+  }
+  input:focus{ outline:none; border-color:#5B9BF0; }
+  button{
+    width:100%; background:#16324F; color:#fff; border:none; border-radius:8px;
+    padding:12px; font-size:0.95rem; font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  button:hover{ background:#1D4363; }
+  .error{ background:#FDEAF4; color:#E86FAE; border-radius:8px; padding:10px 12px; font-size:0.85rem; margin-bottom:16px; text-align:center; }
+</style>
+</head>
+<body>
+  <form class="card" method="POST" action="/login">
+    <h1>&#128213; Study Planner</h1>
+    <p class="sub">Sign in to continue</p>
+    {error_html}
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" autocomplete="username" autofocus required>
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" autocomplete="current-password" required>
+    <button type="submit">Sign In</button>
+  </form>
+</body>
+</html>
+"""
+
+
+def make_session_token(username: str) -> str:
+    expiry = int(time.time()) + SESSION_MAX_AGE
+    payload = f"{username}:{expiry}"
+    signature = hmac.new(SESSION_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}:{signature}"
+
+
+def verify_session_token(token: str) -> bool:
+    try:
+        username, expiry, signature = token.rsplit(":", 2)
+        payload = f"{username}:{expiry}"
+        expected = hmac.new(SESSION_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(signature, expected):
+            return False
+        if int(expiry) < time.time():
+            return False
+        return secrets.compare_digest(username, APP_USERNAME)
+    except Exception:
+        return False
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login_page():
+    return LOGIN_PAGE.replace("{error_html}", "")
 
 
 @app.middleware("http")
@@ -41,23 +125,45 @@ async def require_password(request: Request, call_next):
     if not APP_PASSWORD:
         return await call_next(request)
 
-    auth_header = request.headers.get("authorization")
-    if auth_header and auth_header.startswith("Basic "):
-        try:
-            decoded = base64.b64decode(auth_header[6:]).decode("utf-8")
-            username, _, password = decoded.partition(":")
-        except Exception:
-            username, password = "", ""
+    path = request.url.path
+
+    if path == "/login" and request.method == "POST":
+        form = await request.form()
+        username = form.get("username", "")
+        password = form.get("password", "")
         user_ok = secrets.compare_digest(username, APP_USERNAME)
         pass_ok = secrets.compare_digest(password, APP_PASSWORD)
         if user_ok and pass_ok:
-            return await call_next(request)
+            token = make_session_token(username)
+            response = RedirectResponse(url="/", status_code=303)
+            response.set_cookie(
+                SESSION_COOKIE, token, max_age=SESSION_MAX_AGE,
+                httponly=True, samesite="lax", secure=True,
+            )
+            return response
+        return HTMLResponse(
+            LOGIN_PAGE.replace("{error_html}", '<div class="error">Incorrect username or password.</div>'),
+            status_code=401,
+        )
 
-    return Response(
-        status_code=401,
-        headers={"WWW-Authenticate": 'Basic realm="Study Planner"'},
-        content="Authentication required",
-    )
+    if path == "/login":
+        return await call_next(request)
+
+    if path == "/logout":
+        response = RedirectResponse(url="/login", status_code=303)
+        response.delete_cookie(SESSION_COOKIE)
+        return response
+
+    token = request.cookies.get(SESSION_COOKIE)
+    if token and verify_session_token(token):
+        return await call_next(request)
+
+    # Not logged in: send browsers to the login page, and API/JSON
+    # callers a plain 401 so fetch() calls fail predictably.
+    accepts_html = "text/html" in request.headers.get("accept", "")
+    if accepts_html and not path.startswith("/api/"):
+        return RedirectResponse(url="/login", status_code=303)
+    return Response(status_code=401, content="Authentication required")
 
 # ============================================================
 # Planner events (calendar blocks)
@@ -273,6 +379,7 @@ def delete_wish(wish_id: int, db: Session = Depends(get_db)):
 @app.get("/api/history")
 def history(days: int = 30, db: Session = Depends(get_db)):
     since = datetime.date.today() - datetime.timedelta(days=days)
+    since_dt = datetime.datetime.combine(since, datetime.time.min)
 
     topic_rows = (
         db.query(func.date(models.Topic.completed_at).label("d"), func.count(models.Topic.id))
@@ -288,9 +395,47 @@ def history(days: int = 30, db: Session = Depends(get_db)):
         .group_by("d")
         .all()
     )
+
+    # Detailed, subject-wise completed topics
+    completed_topics = (
+        db.query(models.Topic, models.Subject)
+        .join(models.Subject, models.Topic.subject_id == models.Subject.id)
+        .filter(models.Topic.completed_at.isnot(None))
+        .filter(models.Topic.completed_at >= since_dt)
+        .order_by(models.Topic.completed_at.desc())
+        .all()
+    )
+    completed_events = (
+        db.query(models.PlannerEvent)
+        .filter(models.PlannerEvent.completed_at.isnot(None))
+        .filter(models.PlannerEvent.completed_at >= since_dt)
+        .order_by(models.PlannerEvent.completed_at.desc())
+        .all()
+    )
+
     return {
         "topics_completed": {str(d): c for d, c in topic_rows},
         "events_completed": {str(d): c for d, c in event_rows},
+        "topics": [
+            {
+                "subject": subject.name,
+                "subject_color": subject.color,
+                "text": topic.text,
+                "completed_at": topic.completed_at.isoformat(),
+            }
+            for topic, subject in completed_topics
+        ],
+        "events": [
+            {
+                "label": event.label,
+                "color": event.color,
+                "date": str(event.date),
+                "start_hour": event.start_hour,
+                "end_hour": event.end_hour,
+                "completed_at": event.completed_at.isoformat(),
+            }
+            for event in completed_events
+        ],
     }
 
 

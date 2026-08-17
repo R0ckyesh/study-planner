@@ -192,9 +192,12 @@
 <body>
 
 <div class="topbar">
-  <div class="brand">
-    <h1>Study Planner</h1>
-    <span>live calendar &middot; syllabus tracker &middot; history</span>
+  <div class="brand" style="justify-content:space-between; display:flex; align-items:baseline;">
+    <div>
+      <h1 style="display:inline;">Study Planner</h1>
+      <span style="margin-left:10px;">live calendar &middot; syllabus tracker &middot; history</span>
+    </div>
+    <a href="/logout" style="color:#B9CBDD; font-size:0.8rem; text-decoration:none; font-family:'Inter',sans-serif;">Log out</a>
   </div>
   <div class="tabs">
     <button class="tab active" id="tab-today" onclick="showTab('today')">&#9728;&#65039; Today</button>
@@ -340,6 +343,11 @@
     <div class="card">
       <h2>Completion History</h2>
       <p class="sub">Every topic and task you mark done is timestamped, so this always reflects real history.</p>
+      <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+        <button class="pill mode-active" id="hist-filter-all" onclick="setHistoryFilter('all')">All</button>
+        <button class="pill mode-inactive" id="hist-filter-topics" onclick="setHistoryFilter('topics')">Topics</button>
+        <button class="pill mode-inactive" id="hist-filter-tasks" onclick="setHistoryFilter('tasks')">Tasks</button>
+      </div>
       <ul class="history-list" id="history-list"></ul>
     </div>
   </section>
@@ -487,6 +495,9 @@ function showTab(name){
 
 /* ---------------- Weekly planner ---------------- */
 function hourLabel(h){ const hr12 = h%12===0?12:h%12; return hr12+' '+(h<12?'AM':'PM'); }
+// end_hour is stored as the LAST occupied hour slot (inclusive), so the
+// human-readable end of the range is one hour past that.
+function rangeLabel(startHour, endHour){ return hourLabel(startHour)+'\u2013'+hourLabel(endHour+1); }
 
 function setMode(mode){
   viewMode = mode;
@@ -647,6 +658,12 @@ function openSelectedDayInWeek(){
   setMode('week');
 }
 
+function goToTaskInPlanner(dateISO){
+  weekStart = startOfWeek(new Date(dateISO+'T00:00:00'));
+  showTab('planner');
+  setMode('week');
+}
+
 function buildPlannerGrid(){
   const grid = document.getElementById('planner-grid');
   grid.innerHTML = '';
@@ -742,12 +759,22 @@ async function toggleEventDone(eventId, done){
   if(viewMode==='month') loadMonth(); else loadWeek();
 }
 
+let lastTapKey = null, lastTapTime = 0;
+
 function onCellTap(iso, hour){
+  // Guard against a single physical tap firing two click events in a row
+  // (a known mobile-browser quirk) — ignore an identical tap within 250ms.
+  const tapKey = iso+':'+hour;
+  const now = Date.now();
+  if(tapKey === lastTapKey && (now - lastTapTime) < 250) return;
+  lastTapKey = tapKey; lastTapTime = now;
+
   if(selection.day !== iso){
     selection.day = iso; selection.hours = new Set([hour]);
-  } else if(selection.hours.has(hour) && selection.hours.size===1){
-    selection.hours.clear(); selection.day = null;
   } else {
+    // Selection only ever grows from here — the only way to clear it is the
+    // explicit Clear button. (Tap-to-deselect was removed: it could silently
+    // wipe an in-progress multi-hour selection if a tap double-fired.)
     const vals = [...selection.hours, hour];
     const min=Math.min(...vals), max=Math.max(...vals);
     selection.hours = new Set();
@@ -763,7 +790,7 @@ function updateSelbar(){
   if(selection.hours.size===0){ bar.classList.remove('show'); return; }
   bar.classList.add('show');
   const hrs = [...selection.hours].sort((a,b)=>a-b);
-  text.textContent = `${selection.day}: ${hourLabel(hrs[0])}\u2013${hourLabel(hrs[hrs.length-1])} (${hrs.length}h)`;
+  text.textContent = `${selection.day}: ${rangeLabel(hrs[0], hrs[hrs.length-1])} (${hrs.length}h)`;
 }
 
 function buildColorRow(containerId, onPick, selectedColor){
@@ -918,7 +945,6 @@ async function deleteSubject(id){
 async function addTopicsFromTextarea(subjectId, textarea){
   const lines = splitPastedTopics(textarea.value);
   if(lines.length===0) return;
-  if(lines.length > 3 && !confirm(`This will add ${lines.length} topics:\n\n${lines.slice(0,6).join('\n')}${lines.length>6 ? '\n...' : ''}\n\nLook right?`)) return;
   await fetch(`${API}/api/subjects/${subjectId}/topics`, {
     method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({lines})
   });
@@ -1093,29 +1119,68 @@ async function saveWishBulk(){
 }
 
 /* ---------------- History ---------------- */
+let historyData = null;
+let historyFilter = 'all';
+
+function setHistoryFilter(filter){
+  historyFilter = filter;
+  ['all','topics','tasks'].forEach(f=>{
+    document.getElementById('hist-filter-'+f).className = 'pill ' + (f===filter ? 'mode-active' : 'mode-inactive');
+  });
+  renderHistory();
+}
+
 async function loadHistory(){
   const list = document.getElementById('history-list');
   list.innerHTML = '<li class="hd">Loading...</li>';
   try{
     const res = await fetch(`${API}/api/history?days=30`);
-    const data = await res.json();
-    const dates = new Set([...Object.keys(data.topics_completed), ...Object.keys(data.events_completed)]);
-    const sorted = [...dates].sort().reverse();
-    list.innerHTML='';
-    if(sorted.length===0){
-      list.innerHTML = '<li class="hd">No completions logged yet — mark a task or topic done to start building history.</li>';
-      return;
-    }
-    sorted.forEach(d=>{
-      const topics = data.topics_completed[d] || 0;
-      const evs = data.events_completed[d] || 0;
-      const li=document.createElement('li');
-      li.innerHTML = `<span class="hd">${d}</span><span class="hc">${topics} topics &middot; ${evs} tasks done</span>`;
-      list.appendChild(li);
-    });
+    historyData = await res.json();
+    renderHistory();
   }catch(e){
     list.innerHTML = '<li class="hd">Could not reach the backend.</li>';
   }
+}
+
+function renderHistory(){
+  const list = document.getElementById('history-list');
+  if(!historyData){ list.innerHTML = '<li class="hd">Loading...</li>'; return; }
+
+  const topicItems = (historyData.topics || []).map(t => ({
+    kind:'topic', when: t.completed_at, sortKey: t.completed_at,
+    label: `${escapeHtml(t.subject)} \u2014 ${escapeHtml(t.text)}`,
+    color: t.subject_color, onclick: null
+  }));
+  const eventItems = (historyData.events || []).map(e => ({
+    kind:'task', when: e.completed_at, sortKey: e.completed_at,
+    label: `${escapeHtml(e.label)} (${rangeLabel(e.start_hour, e.end_hour)})`,
+    color: e.color, onclick: `goToTaskInPlanner('${e.date}')`
+  }));
+
+  let items = historyFilter==='topics' ? topicItems : historyFilter==='tasks' ? eventItems : [...topicItems, ...eventItems];
+  items.sort((a,b) => b.sortKey.localeCompare(a.sortKey));
+
+  list.innerHTML = '';
+  if(items.length === 0){
+    list.innerHTML = '<li class="hd">No completions logged yet \u2014 mark a task or topic done to start building history.</li>';
+    return;
+  }
+  items.forEach(item=>{
+    const dt = new Date(item.when);
+    const dateStr = dt.toLocaleDateString(undefined,{month:'short', day:'numeric'});
+    const timeStr = dt.toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'});
+    const li = document.createElement('li');
+    if(item.onclick) li.style.cursor = 'pointer';
+    li.innerHTML = `
+      <span class="hd">
+        <span class="swatch-dot" style="background:${item.color || '#94A3B8'}; display:inline-block; margin-right:6px;"></span>
+        ${item.label}
+      </span>
+      <span class="hc" style="font-weight:400; color:var(--ink-soft);">${dateStr}, ${timeStr}</span>
+    `;
+    if(item.onclick) li.setAttribute('onclick', item.onclick);
+    list.appendChild(li);
+  });
 }
 
 function escapeHtml(str){ const div=document.createElement('div'); div.textContent=str; return div.innerHTML; }
@@ -1174,7 +1239,7 @@ async function loadToday(){
   const nextTask = todayEvents.find(e => !e.done && e.start_hour >= hour);
   const nextEl = document.getElementById('today-next-task');
   if(nextTask){
-    nextEl.innerHTML = `<strong style="color:var(--ink);">${escapeHtml(nextTask.label)}</strong> &mdash; ${hourLabel(nextTask.start_hour)}\u2013${hourLabel(nextTask.end_hour)}`;
+    nextEl.innerHTML = `<strong style="color:var(--ink);">${escapeHtml(nextTask.label)}</strong> &mdash; ${rangeLabel(nextTask.start_hour, nextTask.end_hour)}`;
   } else {
     nextEl.textContent = 'Nothing left scheduled for today.';
   }
@@ -1187,7 +1252,7 @@ async function loadToday(){
   } else {
     todayEvents.forEach(e=>{
       const li = document.createElement('li');
-      li.innerHTML = `<span class="hd">${hourLabel(e.start_hour)}\u2013${hourLabel(e.end_hour)} &middot; ${escapeHtml(e.label)}</span><span class="hc">${e.done ? '\u2713 Done' : ''}</span>`;
+      li.innerHTML = `<span class="hd" style="cursor:pointer;" onclick="goToTaskInPlanner('${e.date}')">${rangeLabel(e.start_hour, e.end_hour)} &middot; ${escapeHtml(e.label)}</span><span class="hc">${e.done ? '\u2713 Done' : ''}</span>`;
       schedList.appendChild(li);
     });
   }

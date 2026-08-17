@@ -85,12 +85,13 @@ Note: I can't create the Render/Neon accounts or click "Deploy" for you — this
 
 ## Password-protecting your app
 
-The app supports a simple password gate (HTTP Basic Auth — the browser's built-in login popup, no extra login page to build or maintain).
+The app has a real login page (not a browser popup) with a signed session cookie — you sign in once and stay logged in for 30 days.
 
 - **Enabled automatically once you set `APP_PASSWORD`** as an environment variable. On Render: Environment tab, same place you added `DATABASE_URL` — or it's already listed in `render.yaml` if you deploy via Blueprint, so Render will prompt you for it during setup.
 - Optional `APP_USERNAME` (defaults to `admin`) if you want a different username.
 - Leave `APP_PASSWORD` unset and there's no login prompt at all — handy while testing locally.
-- The whole app (page and API) is behind it — no one can view or edit your data without the password.
+- The whole app (page and API) is behind it — no one can view or edit your data without logging in.
+- "Log out" link in the top-right of the app clears your session and returns you to the login page.
 - To set it locally: `export APP_PASSWORD="yourpassword"` before running `uvicorn main:app --reload`.
 
 Since it's one shared password rather than separate accounts, anyone you give it to has full access to everything — fine for "just me" or "me and a friend I trust with edit access," not meant for a public/multi-user rollout. Say the word if you want proper separate logins instead.
