@@ -208,6 +208,65 @@ def delete_topic(topic_id: int, db: Session = Depends(get_db)):
 
 
 # ============================================================
+# Wish list
+# ============================================================
+
+@app.get("/api/wishes", response_model=List[schemas.WishOut])
+def list_wishes(db: Session = Depends(get_db)):
+    return db.query(models.Wish).order_by(models.Wish.created_at).all()
+
+
+@app.post("/api/wishes", response_model=schemas.WishOut)
+def create_wish(payload: schemas.WishCreate, db: Session = Depends(get_db)):
+    text = payload.text.strip()
+    if not text:
+        raise HTTPException(400, "Wish text cannot be empty")
+    wish = models.Wish(text=text)
+    db.add(wish)
+    db.commit()
+    db.refresh(wish)
+    return wish
+
+
+@app.post("/api/wishes/bulk", response_model=List[schemas.WishOut])
+def bulk_create_wishes(payload: schemas.WishBulkCreate, db: Session = Depends(get_db)):
+    new_wishes = []
+    for line in payload.lines:
+        line = line.strip()
+        if not line:
+            continue
+        wish = models.Wish(text=line)
+        db.add(wish)
+        new_wishes.append(wish)
+    db.commit()
+    for wish in new_wishes:
+        db.refresh(wish)
+    return new_wishes
+
+
+@app.put("/api/wishes/{wish_id}", response_model=schemas.WishOut)
+def update_wish(wish_id: int, done: bool, db: Session = Depends(get_db)):
+    wish = db.get(models.Wish, wish_id)
+    if not wish:
+        raise HTTPException(404, "Wish not found")
+    wish.done = done
+    wish.completed_at = datetime.datetime.utcnow() if done else None
+    db.commit()
+    db.refresh(wish)
+    return wish
+
+
+@app.delete("/api/wishes/{wish_id}")
+def delete_wish(wish_id: int, db: Session = Depends(get_db)):
+    wish = db.get(models.Wish, wish_id)
+    if not wish:
+        raise HTTPException(404, "Wish not found")
+    db.delete(wish)
+    db.commit()
+    return {"ok": True}
+
+
+# ============================================================
 # History (for "historical data of completed" tracking)
 # ============================================================
 

@@ -62,3 +62,20 @@ class SubjectOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class WishCreate(BaseModel):
+    text: str
+
+
+class WishBulkCreate(BaseModel):
+    lines: List[str]
+
+
+class WishOut(BaseModel):
+    id: int
+    text: str
+    done: bool
+
+    class Config:
+        from_attributes = True

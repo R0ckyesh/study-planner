@@ -8,11 +8,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#182338; --ink-soft:#4B5670;
-    --paper:#F7F3EA; --paper-line:#E1D9C6; --card:#FFFFFF;
-    --navy:#16324F; --teal:#0E7C86; --teal-soft:#DCEFEF;
-    --amber:#C98A2E; --rose:#C24E5C; --rose-soft:#F6DDE0;
-    --green:#2F8F5B; --green-soft:#DCEFDF;
+    --ink:#1E293B; --ink-soft:#64748B;
+    --paper:#F7F3EA; --paper-line:#E4DCC8; --card:#FFFFFF;
+    --navy:#16324F; --navy-2:#1D4363;
+    --blue:#93C5FD; --blue-soft:#EAF3FE; --blue-deep:#5B9BF0;
+    --purple:#C4B5FD; --purple-soft:#F3F0FE; --purple-deep:#8B7AE8;
+    --pink:#F9A8D4; --pink-soft:#FDEAF4; --pink-deep:#E86FAE;
+    --yellow:#FDE68A; --yellow-soft:#FFF8E1; --yellow-deep:#E0B33D;
+    --green:#86EFAC; --green-soft:#E8FBEF; --green-deep:#34A374;
+    --orange:#FDBA74; --orange-soft:#FFF1E3; --orange-deep:#EF9B4E;
+    --teal:var(--blue-deep); --teal-soft:var(--blue-soft);
+    --rose:var(--pink-deep); --rose-soft:var(--pink-soft);
     --shadow:0 8px 24px rgba(22,50,79,0.10); --radius:14px;
   }
   *{box-sizing:border-box;}
@@ -22,19 +28,22 @@
     background: radial-gradient(circle at 1px 1px, var(--paper-line) 1px, transparent 0) 0 0/22px 22px, var(--paper);
     color:var(--ink); min-height:100vh; padding-bottom:60px;
   }
-  .topbar{ background:linear-gradient(120deg,var(--navy),#1D4363); padding:26px 18px 0; color:#fff; }
+  .topbar{ background:linear-gradient(120deg,var(--navy),var(--navy-2)); padding:26px 18px 0; color:#fff; }
   .brand{ display:flex; align-items:baseline; gap:10px; max-width:1000px; margin:0 auto; padding:0 4px 18px; }
   .brand h1{ font-family:'Fraunces',serif; font-weight:600; font-size:1.6rem; margin:0; }
   .brand span{ font-size:0.78rem; color:#B9CBDD; font-family:'IBM Plex Mono',monospace; }
   .tabs{ max-width:1000px; margin:0 auto; display:flex; gap:6px; padding:0 4px; }
   .tab{
-    font-family:'Fraunces',serif; font-weight:600; font-size:0.9rem; color:#D9E4EE;
+    font-family:'Fraunces',serif; font-weight:600; font-size:0.9rem; color:#B9CBDD;
     background:rgba(255,255,255,0.08); border:none; border-radius:10px 10px 0 0;
     padding:12px 16px 14px; cursor:pointer; transform:translateY(6px);
     transition:transform .15s ease, background .15s ease, color .15s ease;
   }
   .tab.active{ background:var(--paper); color:var(--navy); transform:translateY(0); box-shadow:var(--shadow); }
   main{ max-width:1000px; margin:0 auto; padding:22px 14px 0; }
+  @media (min-width:900px){
+    .brand, .tabs, main{ max-width:1400px; }
+  }
   section.view{ display:none; }
   section.view.active{ display:block; }
   .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; margin-bottom:18px; }
@@ -55,7 +64,7 @@
   .week-nav-btns{ display:flex; gap:8px; }
 
   .planner-scroll{ overflow-x:auto; border-radius:12px; border:1px solid var(--paper-line); max-height:70vh; overflow-y:auto; }
-  .planner-grid{ display:grid; grid-template-columns:64px repeat(7,94px); min-width:max-content; position:relative; }
+  .planner-grid{ display:grid; grid-template-columns:74px repeat(7,94px); min-width:max-content; position:relative; }
   .corner{
     position:sticky; top:0; left:0; z-index:6; background:var(--navy);
     border-right:2px solid rgba(255,255,255,0.15); border-bottom:1px solid rgba(255,255,255,0.15);
@@ -65,7 +74,7 @@
     padding:8px 4px; font-family:'Fraunces',serif; font-weight:600; font-size:0.78rem;
     border-bottom:1px solid rgba(255,255,255,0.15);
   }
-  .daycolhead.weekend{ background:#1D4363; }
+  .daycolhead.weekend{ background:var(--navy-2); }
   .daycolhead .dnum{ display:block; font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:#B9CBDD; font-weight:500; }
   .hourlabel{
     position:sticky; left:0; z-index:3; background:var(--navy); color:#fff;
@@ -74,21 +83,22 @@
   }
   .hourcell{ border-right:1px solid var(--paper-line); border-bottom:1px solid var(--paper-line); height:42px; cursor:pointer; background:#fff; transition:background .1s ease; }
   .hourcell:hover{ background:var(--teal-soft); }
-  .hourcell.selected{ background:#BFE3E4; }
-  .hourcell.weekend{ background:#FCFAF5; }
+  .hourcell.selected{ background:#D6E8FE; }
+  .hourcell.weekend{ background:#F7F4FE; }
   .hourcell.weekend:hover{ background:var(--teal-soft); }
-  .donelabel{
-    position:sticky; left:0; z-index:3; background:var(--navy); color:#fff;
-    font-family:'Fraunces',serif; font-weight:600; font-size:0.7rem; display:flex; align-items:center; justify-content:center;
-    border-right:2px solid rgba(255,255,255,0.15);
-  }
-  .donecell{ border-right:1px solid var(--paper-line); display:flex; align-items:center; justify-content:center; background:var(--green-soft); }
-  .donecell input{ width:20px; height:20px; accent-color:var(--green); cursor:pointer; }
   .block{
-    position:absolute; top:3px; bottom:3px; border-radius:7px; display:flex; align-items:center; justify-content:center;
-    font-size:0.72rem; font-weight:600; color:#fff; padding:0 6px; cursor:pointer; overflow:hidden;
-    white-space:nowrap; text-overflow:ellipsis; box-shadow:0 2px 5px rgba(0,0,0,0.15); z-index:1;
+    position:absolute; top:3px; bottom:3px; border-radius:7px; display:flex; align-items:flex-start; justify-content:space-between; gap:2px;
+    font-size:0.7rem; font-weight:600; color:#fff; padding:3px 4px; cursor:pointer; overflow:hidden;
+    box-shadow:0 2px 5px rgba(0,0,0,0.15); z-index:1;
   }
+  .block .block-label{ flex:1; word-break:break-word; line-height:1.15; }
+  .block .block-check{
+    flex:0 0 auto; background:rgba(255,255,255,0.25); border:none; border-radius:4px; color:#fff;
+    width:18px; height:18px; font-size:0.85rem; line-height:1; cursor:pointer; padding:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .block .block-check.checked{ background:rgba(255,255,255,0.55); }
+  .block .block-check:hover{ background:rgba(255,255,255,0.4); }
   .selbar{
     position:sticky; bottom:14px; display:none; justify-content:space-between; align-items:center; gap:10px;
     background:var(--navy); color:#fff; border-radius:12px; padding:12px 16px; margin-top:14px; box-shadow:var(--shadow);
@@ -111,7 +121,7 @@
   .subject-head .mini-bar-fill{ height:100%; background:#fff; width:0%; transition:width .25s ease; }
   .subject-head .mini-label{ font-family:'IBM Plex Mono',monospace; font-size:0.7rem; margin-top:5px; opacity:0.9; }
   .subject-body{ padding:12px 14px 14px; flex:1; display:flex; flex-direction:column; }
-  .subject-body textarea{ width:100%; min-height:64px; border:1.4px solid var(--paper-line); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:0.85rem; resize:vertical; background:#FCFAF5; }
+  .subject-body textarea{ width:100%; min-height:64px; border:1.4px solid var(--paper-line); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:0.85rem; resize:vertical; background:#F7F4FE; }
   .add-topics-row{ display:flex; justify-content:flex-end; margin:6px 0 10px; }
   ul.topic-list{ list-style:none; margin:0; padding:0; max-height:230px; overflow-y:auto; border-top:1px dashed var(--paper-line); }
   ul.topic-list li{ display:flex; align-items:flex-start; gap:8px; padding:8px 2px; border-bottom:1px dashed var(--paper-line); }
@@ -151,6 +161,7 @@
   .month-day:hover{ background:var(--teal-soft); }
   .month-day.today{ border-color:var(--teal); border-width:2px; }
   .month-day.outside{ opacity:0.35; }
+  .month-day.selected{ background:#D6E8FE; border-color:var(--teal); }
   .month-daynum{ font-family:'IBM Plex Mono',monospace; font-size:0.78rem; font-weight:600; color:var(--navy); }
   .month-dots{ display:flex; gap:3px; flex-wrap:wrap; }
   .month-dot{ width:7px; height:7px; border-radius:50%; }
@@ -162,6 +173,20 @@
   .field-row input, .field-row select{ width:100%; border:1.4px solid var(--paper-line); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:0.85rem; }
   .repeat-row{ display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:0.85rem; color:var(--ink-soft); }
   .repeat-row input[type=number]{ width:60px; border:1.4px solid var(--paper-line); border-radius:8px; padding:6px 8px; }
+  /* Desktop enhancements — placed last on purpose so they correctly override
+     the base (mobile-first) rules above instead of being silently cancelled
+     by them due to CSS source order. */
+  @media (min-width:900px){
+    .planner-grid{ grid-template-columns:96px repeat(7,minmax(120px,1fr)); width:100%; }
+    .hourcell{ height:52px; }
+    .hourlabel{ font-size:0.78rem; }
+    .daycolhead{ font-size:0.9rem; padding:12px 4px; }
+    .block{ font-size:0.78rem; padding:5px 6px; }
+    .subject-grid{ grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); }
+    .card{ padding:24px; }
+    .selbar{ padding:16px 22px; font-size:0.95rem; }
+    .selbar span{ font-size:0.95rem; }
+  }
 </style>
 </head>
 <body>
@@ -172,14 +197,69 @@
     <span>live calendar &middot; syllabus tracker &middot; history</span>
   </div>
   <div class="tabs">
-    <button class="tab active" id="tab-planner" onclick="showTab('planner')">&#128197; Weekly Planner</button>
+    <button class="tab active" id="tab-today" onclick="showTab('today')">&#9728;&#65039; Today</button>
+    <button class="tab" id="tab-planner" onclick="showTab('planner')">&#128197; Weekly Planner</button>
     <button class="tab" id="tab-syllabus" onclick="showTab('syllabus')">&#128218; Syllabus Tracker</button>
+    <button class="tab" id="tab-wishlist" onclick="showTab('wishlist')">&#10024; Wish List</button>
     <button class="tab" id="tab-history" onclick="showTab('history')">&#128202; History</button>
   </div>
 </div>
 
 <main>
-  <section class="view active" id="view-planner">
+  <section class="view active" id="view-today">
+    <div class="card" id="today-greeting-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+        <div>
+          <h2 id="today-greeting" style="font-size:1.3rem; margin-bottom:2px;">Hello</h2>
+          <p class="sub" id="today-date" style="margin:0;">&nbsp;</p>
+        </div>
+        <div style="text-align:right;">
+          <div class="overall-label" id="today-streak" style="font-size:0.95rem;">&#128293; 0-day streak</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Today's Progress</h2>
+      <div class="overall-progress" style="margin-bottom:10px;">
+        <div class="bar-track"><div class="bar-fill" id="today-progress-fill"></div></div>
+        <div class="overall-label" id="today-progress-label">0 / 0 tasks</div>
+      </div>
+      <div style="display:flex; gap:18px; flex-wrap:wrap; font-size:0.85rem; color:var(--ink-soft);">
+        <span>Planned: <strong id="today-planned-hours" style="color:var(--ink);">0h</strong></span>
+        <span>Completed: <strong id="today-done-hours" style="color:var(--ink);">0h</strong></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Quick Add</h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="pill pill-teal" onclick="showTab('planner')">+ Task</button>
+        <button class="pill pill-ghost" onclick="showTab('syllabus')">+ Subject / Topic</button>
+        <button class="pill pill-ghost" onclick="showTab('wishlist')">+ Wish</button>
+        <button class="pill pill-ghost" onclick="alert('Study Sessions (Focus/Pomodoro mode) are coming in the next update.')" title="Coming soon">+ Study Session</button>
+        <button class="pill pill-ghost" onclick="alert('Goals are coming in the next update.')" title="Coming soon">+ Goal</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Next Up</h2>
+      <div id="today-next-task" class="sub">Nothing scheduled right now.</div>
+    </div>
+
+    <div class="card">
+      <h2>Today's Schedule</h2>
+      <ul class="history-list" id="today-schedule-list"></ul>
+    </div>
+
+    <div class="card">
+      <h2>&#128204; Needs Attention</h2>
+      <p class="sub">Rule-based, from your actual subject/topic progress &mdash; not AI-generated.</p>
+      <ul class="history-list" id="today-attention-list"></ul>
+    </div>
+  </section>
+
+  <section class="view" id="view-planner">
     <div class="card">
       <div class="week-nav">
         <button class="pill pill-nav" onclick="shiftView(-1)">&larr; Prev</button>
@@ -205,44 +285,54 @@
           <button class="pill pill-teal" onclick="openBlockModal()">Add Task</button>
         </div>
       </div>
+
+      <div class="selbar" id="month-selbar">
+        <span id="month-selbar-text">0 days selected</span>
+        <div class="selbar-btns">
+          <button class="pill pill-ghost" id="month-week-view-btn" onclick="openSelectedDayInWeek()" style="display:none;">Open in Week</button>
+          <button class="pill pill-ghost" onclick="clearMonthSelection()">Clear</button>
+          <button class="pill pill-teal" onclick="openBlockModal(null, true)">Add Task</button>
+        </div>
+      </div>
+
       <div class="status-msg" id="planner-status"></div>
     </div>
   </section>
 
   <section class="view" id="view-syllabus">
     <div class="card">
-      <h2>Overall Progress</h2>
-      <div class="overall-progress">
-        <div class="bar-track"><div class="bar-fill" id="overall-fill"></div></div>
-        <div class="overall-label" id="overall-label">0 / 0 topics</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+        <div style="flex:1; min-width:200px;">
+          <h2 style="margin-bottom:8px;">Overall Progress</h2>
+          <div class="overall-progress">
+            <div class="bar-track"><div class="bar-fill" id="overall-fill"></div></div>
+            <div class="overall-label" id="overall-label">0 / 0 topics</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="pill pill-teal" onclick="openBulkImportModal()">&#128218; Bulk Import Syllabus</button>
+          <button class="pill pill-ghost" onclick="openSubjectModal()">+ Add Subject</button>
+        </div>
       </div>
     </div>
 
+    <div class="subject-grid" id="subject-grid"></div>
+  </section>
+
+  <section class="view" id="view-wishlist">
     <div class="card">
-      <h2>Bulk Import Syllabus</h2>
-      <p class="sub">Paste your whole syllabus &mdash; multiple subjects at once. It auto-splits into separate checklists.
-        Put a <strong>blank line between subjects</strong> (the first line of each block becomes the subject name),
-        or force a subject break anywhere with a line starting with <strong>#</strong>.</p>
-      <textarea id="bulk-input" style="width:100%; min-height:160px; border:1.4px solid var(--paper-line); border-radius:8px; padding:10px 12px; font-family:inherit; font-size:0.88rem; resize:vertical; background:#FCFAF5;" placeholder="DBMS
-Normalization (1NF-BCNF)
-ER Diagrams
-Transactions &amp; Concurrency
-
-SQL
-Joins &amp; Subqueries
-Indexing
-
-# Operating Systems
-Process Scheduling
-Deadlocks"></textarea>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; flex-wrap:wrap; gap:8px;">
-        <span id="bulk-preview" class="status-msg" style="padding:0;"></span>
-        <button class="pill pill-teal" onclick="importBulkSyllabus()">Import &amp; Segregate</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:14px;">
+        <div>
+          <h2 style="margin-bottom:4px;">Wish List</h2>
+          <p class="sub" style="margin:0;">Things you want to do, get, or achieve &mdash; big or small.</p>
+        </div>
+        <button class="pill pill-ghost" onclick="openWishBulkModal()">Paste Multiple</button>
       </div>
-    </div>
-
-    <div class="subject-grid" id="subject-grid">
-      <div class="add-subject-card" onclick="openSubjectModal()">+ Add Single Subject</div>
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <input type="text" id="wish-quick-input" placeholder="Add a wish and press Enter..." style="flex:1; border:1.4px solid var(--paper-line); border-radius:8px; padding:10px 12px; font-family:inherit; font-size:0.9rem;">
+        <button class="pill pill-teal" onclick="addQuickWish()">Add</button>
+      </div>
+      <ul class="topic-list" id="wish-list" style="max-height:none; border-top:1px dashed var(--paper-line);"></ul>
     </div>
   </section>
 
@@ -306,15 +396,58 @@ Deadlocks"></textarea>
   </div>
 </div>
 
+<div class="overlay" id="bulk-overlay">
+  <div class="modal" style="max-width:520px;">
+    <h3>Bulk Import Syllabus</h3>
+    <p class="sub">Paste your whole syllabus &mdash; multiple subjects at once. It auto-splits into separate checklists.
+      Put a <strong>blank line between subjects</strong> (the first line of each block becomes the subject name),
+      or force a subject break anywhere with a line starting with <strong>#</strong>.</p>
+    <textarea id="bulk-input" style="width:100%; min-height:180px; border:1.4px solid var(--paper-line); border-radius:8px; padding:10px 12px; font-family:inherit; font-size:0.88rem; resize:vertical; background:#F7F4FE; margin-bottom:10px;" placeholder="DBMS
+Normalization (1NF-BCNF)
+ER Diagrams
+Transactions &amp; Concurrency
+
+SQL
+Joins &amp; Subqueries
+Indexing
+
+# Operating Systems
+Process Scheduling
+Deadlocks"></textarea>
+    <div style="margin-bottom:14px;">
+      <span id="bulk-preview" class="status-msg" style="padding:0; text-align:left; display:block;"></span>
+    </div>
+    <div class="modal-actions">
+      <button class="pill pill-ghost" onclick="closeBulkImportModal()">Cancel</button>
+      <button class="pill pill-teal" onclick="importBulkSyllabus()">Import &amp; Segregate</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="wish-bulk-overlay">
+  <div class="modal" style="max-width:480px;">
+    <h3>Paste Multiple Wishes</h3>
+    <p class="sub">One wish per line &mdash; each becomes its own checklist item.</p>
+    <textarea id="wish-bulk-input" style="width:100%; min-height:160px; border:1.4px solid var(--paper-line); border-radius:8px; padding:10px 12px; font-family:inherit; font-size:0.88rem; resize:vertical; background:#F7F4FE; margin-bottom:14px;" placeholder="Visit Japan
+Learn to play guitar
+Run a half marathon"></textarea>
+    <div class="modal-actions">
+      <button class="pill pill-ghost" onclick="closeWishBulkModal()">Cancel</button>
+      <button class="pill pill-teal" onclick="saveWishBulk()">Add All</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = ''; // same origin as the backend
 const DAY_ABBR = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
 const START_HOUR = 5, END_HOUR = 23, NUM_SLOTS = END_HOUR - START_HOUR + 1;
-const PALETTE = ["#0E7C86","#C98A2E","#C24E5C","#2F8F5B","#6C63B5","#3B7DBF"];
+const PALETTE = ["#5B9BF0","#8B7AE8","#E86FAE","#E0B33D","#34A374","#EF9B4E"];
 
 let weekStart = startOfWeek(new Date());
 let monthCursor = startOfMonth(new Date());
 let viewMode = 'week'; // 'week' | 'month'
+let monthSelection = { anchor:null, dates:[] };
 let events = [];               // events for the current visible week (from API)
 let monthEvents = [];           // events for the current visible month (for dots)
 let selection = { day:null, hours:new Set() };
@@ -343,15 +476,17 @@ function fmtRange(start){
 }
 
 function showTab(name){
-  ['planner','syllabus','history'].forEach(n=>{
+  ['today','planner','syllabus','wishlist','history'].forEach(n=>{
     document.getElementById('view-'+n).classList.toggle('active', n===name);
     document.getElementById('tab-'+n).classList.toggle('active', n===name);
   });
   if(name==='history') loadHistory();
+  if(name==='wishlist') loadWishes();
+  if(name==='today') loadToday();
 }
 
 /* ---------------- Weekly planner ---------------- */
-function hourLabel(h){ const hr12 = h%12===0?12:h%12; return hr12+(h<12?'a':'p'); }
+function hourLabel(h){ const hr12 = h%12===0?12:h%12; return hr12+' '+(h<12?'AM':'PM'); }
 
 function setMode(mode){
   viewMode = mode;
@@ -360,9 +495,10 @@ function setMode(mode){
   document.getElementById('week-wrap').style.display = mode==='week' ? 'block' : 'none';
   document.getElementById('month-grid').style.display = mode==='month' ? 'grid' : 'none';
   document.getElementById('selbar').classList.toggle('show', mode==='week' && selection.hours.size>0);
+  document.getElementById('month-selbar').classList.toggle('show', mode==='month' && monthSelection.dates.length>0);
   document.getElementById('planner-hint').textContent = mode==='week'
     ? 'Tap an hour to select it, tap more hours in the same row to extend the range, then add a task. Tap a block to edit, reschedule, or delete it.'
-    : 'Tap a day to open its week view. Dots show tasks scheduled that day.';
+    : 'Tap a day to select it, tap another day to select the range between them, then add a task across all of them. Dots show tasks already scheduled.';
   if(mode==='month') loadMonth(); else loadWeek();
 }
 
@@ -434,8 +570,9 @@ function buildMonthGrid(){
   for(let i=0;i<42;i++){
     const date = addDays(gridStart, i);
     const iso = fmtISO(date);
+    const isSelected = monthSelection.dates.includes(iso);
     const cell = document.createElement('div');
-    cell.className = 'month-day' + (iso===todayISO ? ' today' : '') + (date.getMonth()!==monthCursor.getMonth() ? ' outside' : '');
+    cell.className = 'month-day' + (iso===todayISO ? ' today' : '') + (date.getMonth()!==monthCursor.getMonth() ? ' outside' : '') + (isSelected ? ' selected' : '');
 
     const num = document.createElement('div'); num.className='month-daynum'; num.textContent = date.getDate();
     cell.appendChild(num);
@@ -454,12 +591,60 @@ function buildMonthGrid(){
       }
     }
 
-    cell.addEventListener('click', ()=>{
-      weekStart = startOfWeek(date);
-      setMode('week');
-    });
+    cell.addEventListener('click', ()=> onMonthDayTap(iso));
     grid.appendChild(cell);
   }
+}
+
+function onMonthDayTap(iso){
+  if(monthSelection.dates.length === 0){
+    monthSelection.anchor = iso;
+    monthSelection.dates = [iso];
+  } else if(monthSelection.dates.length === 1 && monthSelection.dates[0] === iso){
+    monthSelection = { anchor:null, dates:[] };
+  } else {
+    const start = monthSelection.anchor < iso ? monthSelection.anchor : iso;
+    const end = monthSelection.anchor < iso ? iso : monthSelection.anchor;
+    const dates = [];
+    let d = new Date(start+'T00:00:00');
+    const endD = new Date(end+'T00:00:00');
+    while(d <= endD){ dates.push(fmtISO(d)); d = addDays(d,1); }
+    monthSelection.dates = dates;
+  }
+  buildMonthGrid();
+  updateMonthSelbar();
+}
+
+function clearMonthSelection(){
+  monthSelection = { anchor:null, dates:[] };
+  buildMonthGrid();
+  updateMonthSelbar();
+}
+
+function updateMonthSelbar(){
+  const bar = document.getElementById('month-selbar');
+  const text = document.getElementById('month-selbar-text');
+  const weekBtn = document.getElementById('month-week-view-btn');
+  const n = monthSelection.dates.length;
+  if(n === 0){ bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  if(n === 1){
+    const d = new Date(monthSelection.dates[0]+'T00:00:00');
+    text.textContent = d.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
+    weekBtn.style.display = 'inline-block';
+  } else {
+    const first = new Date(monthSelection.dates[0]+'T00:00:00');
+    const last = new Date(monthSelection.dates[n-1]+'T00:00:00');
+    text.textContent = `${first.toLocaleDateString(undefined,{month:'short',day:'numeric'})} \u2013 ${last.toLocaleDateString(undefined,{month:'short',day:'numeric'})} (${n} days)`;
+    weekBtn.style.display = 'none';
+  }
+}
+
+function openSelectedDayInWeek(){
+  if(monthSelection.dates.length !== 1) return;
+  weekStart = startOfWeek(new Date(monthSelection.dates[0]+'T00:00:00'));
+  clearMonthSelection();
+  setMode('week');
 }
 
 function buildPlannerGrid(){
@@ -501,41 +686,18 @@ function buildPlannerGrid(){
     }
   }
 
-  // done row
-  const doneLbl = document.createElement('div');
-  doneLbl.className = 'donelabel';
-  doneLbl.textContent = '\u2713 Done';
-  grid.appendChild(doneLbl);
-
-  for(let dIdx=0; dIdx<7; dIdx++){
-    const iso = fmtISO(dayDates[dIdx]);
-    const dayEvents = events.filter(e => e.date === iso);
-    const allDone = dayEvents.length > 0 && dayEvents.every(e => e.done);
-    const doneCell = document.createElement('div'); doneCell.className='donecell';
-    const chk = document.createElement('input'); chk.type='checkbox'; chk.checked = allDone;
-    chk.addEventListener('change', () => markDayDone(iso, chk.checked));
-    doneCell.appendChild(chk);
-    grid.appendChild(doneCell);
-  }
-
   positionBlocks();
-}
-
-async function markDayDone(iso, done){
-  const dayEvents = events.filter(e => e.date === iso);
-  for(const ev of dayEvents){
-    await fetch(`${API}/api/events/${ev.id}`, {
-      method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({done})
-    });
-  }
-  loadWeek();
 }
 
 function positionBlocks(){
   const grid = document.getElementById('planner-grid');
-  const timeColW = 64, dayColW = 94, rowH = 42;
   const firstCell = grid.querySelector('.hourcell');
-  if(!firstCell) return;
+  const firstLabel = grid.querySelector('.hourlabel');
+  if(!firstCell || !firstLabel) return;
+
+  const timeColW = firstLabel.offsetWidth;
+  const dayColW = firstCell.offsetWidth;
+  const rowH = firstCell.offsetHeight;
   const baseTop = firstCell.offsetTop;
   grid.style.position = 'relative';
 
@@ -549,11 +711,35 @@ function positionBlocks(){
     div.style.top = (baseTop + (ev.start_hour - START_HOUR)*rowH + 2) + 'px';
     div.style.height = ((ev.end_hour - ev.start_hour + 1)*rowH - 4) + 'px';
     div.style.background = ev.color;
-    div.textContent = ev.label + (ev.done ? ' \u2713' : '');
     div.style.opacity = ev.done ? '0.55' : '1';
     div.addEventListener('click', (e)=>{ e.stopPropagation(); openBlockModal(ev.id); });
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'block-label';
+    labelSpan.textContent = ev.label;
+    if(ev.done) labelSpan.style.textDecoration = 'line-through';
+    div.appendChild(labelSpan);
+
+    const check = document.createElement('button');
+    check.className = 'block-check' + (ev.done ? ' checked' : '');
+    check.type = 'button';
+    check.title = ev.done ? 'Mark not done' : 'Mark done';
+    check.textContent = ev.done ? '\u2611' : '\u2610';
+    check.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleEventDone(ev.id, !ev.done);
+    });
+    div.appendChild(check);
+
     grid.appendChild(div);
   });
+}
+
+async function toggleEventDone(eventId, done){
+  await fetch(`${API}/api/events/${eventId}`, {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({done})
+  });
+  if(viewMode==='month') loadMonth(); else loadWeek();
 }
 
 function onCellTap(iso, hour){
@@ -602,7 +788,9 @@ function populateHourSelect(selectEl){
   }
 }
 
-function openBlockModal(eventId){
+let monthRangeMode = false;
+
+function openBlockModal(eventId, fromMonthRange){
   const overlay=document.getElementById('block-overlay');
   const title=document.getElementById('block-modal-title');
   const input=document.getElementById('block-label-input');
@@ -616,6 +804,7 @@ function openBlockModal(eventId){
 
   populateHourSelect(startInput);
   populateHourSelect(endInput);
+  monthRangeMode = !!fromMonthRange;
 
   if(eventId){
     editingEventId = eventId;
@@ -626,8 +815,25 @@ function openBlockModal(eventId){
     reschedRow.style.display='flex';
     repeatRow.style.display='none';
     dateInput.value = ev.date;
+    dateInput.disabled = false;
     startInput.value = ev.start_hour;
     endInput.value = ev.end_hour;
+  } else if(monthRangeMode){
+    if(monthSelection.dates.length===0) return;
+    if(monthSelection.dates.length > 90){
+      alert('That range is too large (max 90 days). Select a smaller range.');
+      return;
+    }
+    editingEventId=null; title.textContent = `Add Task \u2014 ${monthSelection.dates.length} day(s)`;
+    input.value=''; pendingBlockColor=PALETTE[0];
+    delBtn.style.display='none';
+    delFutureBtn.style.display='none';
+    repeatRow.style.display='none';
+    reschedRow.style.display='flex';
+    dateInput.value = monthSelection.dates[0];
+    dateInput.disabled = true; // date range is fixed by the month selection
+    startInput.value = 9;
+    endInput.value = 10;
   } else {
     if(selection.hours.size===0) return;
     editingEventId=null; title.textContent='Add Task'; input.value=''; pendingBlockColor=PALETTE[0];
@@ -646,15 +852,24 @@ function closeBlockModal(){ document.getElementById('block-overlay').classList.r
 async function saveBlock(){
   const label = document.getElementById('block-label-input').value.trim();
   if(!label) return;
+  const start_hour = parseInt(document.getElementById('block-start-input').value,10);
+  const end_hour = parseInt(document.getElementById('block-end-input').value,10);
+  if(end_hour < start_hour){ alert('End time must be after start time.'); return; }
+
   if(editingEventId){
     const date = document.getElementById('block-date-input').value;
-    const start_hour = parseInt(document.getElementById('block-start-input').value,10);
-    const end_hour = parseInt(document.getElementById('block-end-input').value,10);
-    if(end_hour < start_hour){ alert('End time must be after start time.'); return; }
     await fetch(`${API}/api/events/${editingEventId}`, {
       method:'PUT', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({label, color: pendingBlockColor, date, start_hour, end_hour})
     });
+  } else if(monthRangeMode){
+    for(const iso of monthSelection.dates){
+      await fetch(`${API}/api/events`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ date: iso, start_hour, end_hour, label, color: pendingBlockColor, repeat_weekly:false })
+      });
+    }
+    clearMonthSelection();
   } else {
     const hrs=[...selection.hours].sort((a,b)=>a-b);
     const repeat_weekly = document.getElementById('repeat-checkbox').checked;
@@ -701,8 +916,9 @@ async function deleteSubject(id){
   loadSubjects();
 }
 async function addTopicsFromTextarea(subjectId, textarea){
-  const lines = textarea.value.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  const lines = splitPastedTopics(textarea.value);
   if(lines.length===0) return;
+  if(lines.length > 3 && !confirm(`This will add ${lines.length} topics:\n\n${lines.slice(0,6).join('\n')}${lines.length>6 ? '\n...' : ''}\n\nLook right?`)) return;
   await fetch(`${API}/api/subjects/${subjectId}/topics`, {
     method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({lines})
   });
@@ -746,6 +962,17 @@ function renderSubjects(){
     const body = document.createElement('div'); body.className='subject-body';
     const ta = document.createElement('textarea'); ta.placeholder='Paste topics for '+subject.name+', one per line';
     body.appendChild(ta);
+
+    const previewLine = document.createElement('div');
+    previewLine.className = 'status-msg';
+    previewLine.style.cssText = 'padding:6px 0 0; text-align:left;';
+    ta.addEventListener('input', ()=>{
+      if(ta.value.trim()===''){ previewLine.textContent=''; return; }
+      const parsed = splitPastedTopics(ta.value);
+      previewLine.textContent = `Will add ${parsed.length} topic${parsed.length===1?'':'s'}`;
+    });
+    body.appendChild(previewLine);
+
     const addRow = document.createElement('div'); addRow.className='add-topics-row';
     const addBtn = document.createElement('button'); addBtn.className='pill pill-teal'; addBtn.textContent='+ Add Topics';
     addBtn.addEventListener('click',()=>addTopicsFromTextarea(subject.id, ta));
@@ -771,15 +998,98 @@ function renderSubjects(){
     body.appendChild(list); card.appendChild(body); grid.appendChild(card);
   });
 
-  const addCard=document.createElement('div'); addCard.className='add-subject-card'; addCard.textContent='+ Add Subject';
-  addCard.addEventListener('click', openSubjectModal);
-  grid.appendChild(addCard);
+  if(subjects.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'add-subject-card';
+    empty.style.gridColumn = '1 / -1';
+    empty.innerHTML = 'No subjects yet &mdash; use <strong>&nbsp;Bulk Import Syllabus&nbsp;</strong> or <strong>&nbsp;+ Add Subject&nbsp;</strong> above to get started.';
+    grid.appendChild(empty);
+  }
 
   let total=0, done=0;
   subjects.forEach(s=>{ total+=s.topics.length; done+=s.topics.filter(t=>t.done).length; });
   const pct = total ? Math.round((done/total)*100) : 0;
   document.getElementById('overall-fill').style.width = pct+'%';
   document.getElementById('overall-label').textContent = `${done} / ${total} topics`;
+}
+
+/* ---------------- Wish List ---------------- */
+let wishes = [];
+
+async function loadWishes(){
+  try{
+    const res = await fetch(`${API}/api/wishes`);
+    wishes = await res.json();
+  }catch(e){ wishes = []; }
+  renderWishes();
+}
+
+function renderWishes(){
+  const list = document.getElementById('wish-list');
+  list.innerHTML = '';
+  if(wishes.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'topic-empty';
+    empty.textContent = 'Nothing here yet \u2014 add a wish above.';
+    list.appendChild(empty);
+    return;
+  }
+  wishes.forEach(wish => {
+    const li = document.createElement('li');
+    if(wish.done) li.classList.add('done');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = wish.done;
+    cb.addEventListener('change', ()=>toggleWish(wish.id, cb.checked));
+    const lbl = document.createElement('label');
+    lbl.textContent = wish.text;
+    const del = document.createElement('button');
+    del.className = 'del'; del.innerHTML = '&times;';
+    del.addEventListener('click', ()=>removeWish(wish.id));
+    li.appendChild(cb); li.appendChild(lbl); li.appendChild(del);
+    list.appendChild(li);
+  });
+}
+
+async function addQuickWish(){
+  const input = document.getElementById('wish-quick-input');
+  const text = input.value.trim();
+  if(!text) return;
+  await fetch(`${API}/api/wishes`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text})
+  });
+  input.value = '';
+  loadWishes();
+}
+document.getElementById('wish-quick-input').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') addQuickWish();
+});
+
+async function toggleWish(id, done){
+  await fetch(`${API}/api/wishes/${id}?done=${done}`, {method:'PUT'});
+  loadWishes();
+}
+async function removeWish(id){
+  await fetch(`${API}/api/wishes/${id}`, {method:'DELETE'});
+  loadWishes();
+}
+
+function openWishBulkModal(){
+  document.getElementById('wish-bulk-input').value = '';
+  document.getElementById('wish-bulk-overlay').classList.add('show');
+  setTimeout(()=>document.getElementById('wish-bulk-input').focus(), 50);
+}
+function closeWishBulkModal(){
+  document.getElementById('wish-bulk-overlay').classList.remove('show');
+}
+async function saveWishBulk(){
+  const textarea = document.getElementById('wish-bulk-input');
+  const lines = splitPastedTopics(textarea.value);
+  if(lines.length === 0) return;
+  await fetch(`${API}/api/wishes/bulk`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({lines})
+  });
+  closeWishBulkModal();
+  loadWishes();
 }
 
 /* ---------------- History ---------------- */
@@ -810,6 +1120,126 @@ async function loadHistory(){
 
 function escapeHtml(str){ const div=document.createElement('div'); div.textContent=str; return div.innerHTML; }
 
+/* ---------------- Smart line-splitting for pasted topics ----------------
+   Handles the common case where pasted text (e.g. copied from a PDF or
+   numbered syllabus) has no real line breaks between items, only numbering
+   like "1. Basics...2. Data Modeling...3. Query Languages..." run together.
+   Falls back to plain newline splitting when the text already has real
+   line breaks per item. */
+function splitPastedTopics(text){
+  const rawLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const result = [];
+  rawLines.forEach(line => {
+    // A long line containing multiple "N. Capitalized" markers is almost
+    // certainly several topics that got merged onto one line.
+    const markerCount = (line.match(/\d+\.\s+[A-Z]/g) || []).length;
+    if(line.length > 100 && markerCount > 1){
+      const parts = line.split(/(?=\d+\.\s+[A-Z])/).map(p => p.trim()).filter(p => p.length > 0);
+      result.push(...parts);
+    } else {
+      result.push(line);
+    }
+  });
+  return result;
+}
+
+/* ---------------- Today Dashboard ---------------- */
+async function loadToday(){
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('today-greeting').textContent = greeting;
+  document.getElementById('today-date').textContent = now.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+
+  const todayISO = fmtISO(now);
+  let todayEvents = [];
+  try{
+    const res = await fetch(`${API}/api/events?start=${todayISO}&end=${todayISO}`);
+    todayEvents = (await res.json()).sort((a,b)=>a.start_hour-b.start_hour);
+  }catch(e){ todayEvents = []; }
+
+  // Progress
+  const total = todayEvents.length;
+  const done = todayEvents.filter(e=>e.done).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('today-progress-fill').style.width = pct+'%';
+  document.getElementById('today-progress-label').textContent = `${done} / ${total} tasks (${pct}%)`;
+
+  const plannedHours = todayEvents.reduce((sum,e)=>sum+(e.end_hour-e.start_hour+1),0);
+  const doneHours = todayEvents.filter(e=>e.done).reduce((sum,e)=>sum+(e.end_hour-e.start_hour+1),0);
+  document.getElementById('today-planned-hours').textContent = plannedHours+'h';
+  document.getElementById('today-done-hours').textContent = doneHours+'h';
+
+  // Next up
+  const nextTask = todayEvents.find(e => !e.done && e.start_hour >= hour);
+  const nextEl = document.getElementById('today-next-task');
+  if(nextTask){
+    nextEl.innerHTML = `<strong style="color:var(--ink);">${escapeHtml(nextTask.label)}</strong> &mdash; ${hourLabel(nextTask.start_hour)}\u2013${hourLabel(nextTask.end_hour)}`;
+  } else {
+    nextEl.textContent = 'Nothing left scheduled for today.';
+  }
+
+  // Schedule list
+  const schedList = document.getElementById('today-schedule-list');
+  schedList.innerHTML = '';
+  if(todayEvents.length === 0){
+    schedList.innerHTML = '<li class="hd">Nothing scheduled today. Add a task from the Weekly Planner.</li>';
+  } else {
+    todayEvents.forEach(e=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="hd">${hourLabel(e.start_hour)}\u2013${hourLabel(e.end_hour)} &middot; ${escapeHtml(e.label)}</span><span class="hc">${e.done ? '\u2713 Done' : ''}</span>`;
+      schedList.appendChild(li);
+    });
+  }
+
+  // Streak (from real completion history)
+  try{
+    const histRes = await fetch(`${API}/api/history?days=60`);
+    const hist = await histRes.json();
+    const activeDates = new Set([...Object.keys(hist.topics_completed||{}), ...Object.keys(hist.events_completed||{})]);
+    let streak = 0;
+    let cursor = new Date(now); cursor.setHours(0,0,0,0);
+    while(activeDates.has(fmtISO(cursor))){
+      streak++;
+      cursor.setDate(cursor.getDate()-1);
+    }
+    document.getElementById('today-streak').textContent = `\u{1F525} ${streak}-day streak`;
+  }catch(e){
+    document.getElementById('today-streak').textContent = '\u{1F525} \u2013';
+  }
+
+  // Needs Attention (rule-based from real subject/topic data)
+  try{
+    const subRes = await fetch(`${API}/api/subjects`);
+    const subs = await subRes.json();
+    const attList = document.getElementById('today-attention-list');
+    attList.innerHTML = '';
+    const candidates = subs
+      .map(s => {
+        const total = s.topics.length;
+        const done = s.topics.filter(t=>t.done).length;
+        const pct = total ? Math.round((done/total)*100) : 0;
+        const nextTopic = s.topics.find(t=>!t.done);
+        return { subject:s, total, done, pct, nextTopic };
+      })
+      .filter(c => c.total > 0 && c.pct < 100)
+      .sort((a,b) => a.pct - b.pct)
+      .slice(0,4);
+    if(candidates.length === 0){
+      attList.innerHTML = '<li class="hd">Nothing flagged \u2014 all tracked subjects are complete or empty.</li>';
+    } else {
+      candidates.forEach(c=>{
+        const li = document.createElement('li');
+        const reason = c.done===0 ? 'Not started' : `${c.pct}% complete`;
+        li.innerHTML = `<span class="hd">${escapeHtml(c.subject.name)}${c.nextTopic ? ' \u2014 '+escapeHtml(c.nextTopic.text) : ''}</span><span class="hc">${reason}</span>`;
+        attList.appendChild(li);
+      });
+    }
+  }catch(e){
+    document.getElementById('today-attention-list').innerHTML = '<li class="hd">Could not load.</li>';
+  }
+}
+
 /* ---------------- Bulk import (auto-segregate into subjects) ---------------- */
 function parseBulkSyllabus(text){
   const rawLines = text.split('\n');
@@ -834,7 +1264,20 @@ function parseBulkSyllabus(text){
     sawBlank = false;
   });
 
+  segments.forEach(seg => {
+    seg.topics = splitPastedTopics(seg.topics.join('\n'));
+  });
+
   return segments.filter(s => s.subjectName && s.topics.length > 0);
+}
+
+function openBulkImportModal(){
+  document.getElementById('bulk-preview').textContent = '';
+  document.getElementById('bulk-overlay').classList.add('show');
+  setTimeout(()=>document.getElementById('bulk-input').focus(), 50);
+}
+function closeBulkImportModal(){
+  document.getElementById('bulk-overlay').classList.remove('show');
 }
 
 document.getElementById('bulk-input').addEventListener('input', (e)=>{
@@ -850,7 +1293,6 @@ async function importBulkSyllabus(){
   const segments = parseBulkSyllabus(textarea.value);
   if(segments.length === 0) return;
 
-  setStatus('planner-status',''); // no-op, just reuse pattern
   const preview = document.getElementById('bulk-preview');
   preview.textContent = 'Importing...';
 
@@ -872,6 +1314,7 @@ async function importBulkSyllabus(){
   }
 
   textarea.value = '';
+  closeBulkImportModal();
   preview.textContent = `Imported ${segments.length} subject(s).`;
   loadSubjects();
 }
@@ -881,6 +1324,7 @@ document.getElementById('mode-week-btn').className = 'pill mode-active';
 document.getElementById('mode-month-btn').className = 'pill mode-inactive';
 loadWeek();
 loadSubjects();
+loadToday();
 window.addEventListener('resize', positionBlocks);
 </script>
 </body>
