@@ -136,9 +136,14 @@ async def require_password(request: Request, call_next):
         if user_ok and pass_ok:
             token = make_session_token(username)
             response = RedirectResponse(url="/", status_code=303)
+            # Only require HTTPS for the cookie when actually served over HTTPS
+            # (e.g. Render). Over plain http:// (local testing), a Secure
+            # cookie would be silently dropped by the browser and you'd get
+            # stuck bouncing back to the login page.
+            is_https = request.url.scheme == "https"
             response.set_cookie(
                 SESSION_COOKIE, token, max_age=SESSION_MAX_AGE,
-                httponly=True, samesite="lax", secure=True,
+                httponly=True, samesite="lax", secure=is_https,
             )
             return response
         return HTMLResponse(
