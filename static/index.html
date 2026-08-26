@@ -63,7 +63,7 @@
   .week-range{ font-family:'IBM Plex Mono',monospace; font-size:0.9rem; color:var(--navy); font-weight:600; }
   .week-nav-btns{ display:flex; gap:8px; }
 
-  .planner-scroll{ overflow-x:auto; border-radius:12px; border:1px solid var(--paper-line); max-height:70vh; overflow-y:auto; }
+  .planner-scroll{ overflow-x:auto; border-radius:12px; border:1px solid var(--paper-line); max-height:70vh; overflow-y:auto; position:relative; }
   .planner-grid{ display:grid; grid-template-columns:74px repeat(7,94px); min-width:max-content; position:relative; }
   .corner{
     position:sticky; top:0; left:0; z-index:6; background:var(--navy);
@@ -72,25 +72,52 @@
   .daycolhead{
     position:sticky; top:0; z-index:4; background:var(--navy); color:#fff; text-align:center;
     padding:8px 4px; font-family:'Fraunces',serif; font-weight:600; font-size:0.78rem;
-    border-bottom:1px solid rgba(255,255,255,0.15);
+    border-bottom:1px solid rgba(255,255,255,0.15); transition:background .15s ease;
   }
   .daycolhead.weekend{ background:var(--navy-2); }
+  .daycolhead.is-today{ background:var(--blue-deep); }
   .daycolhead .dnum{ display:block; font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:#B9CBDD; font-weight:500; }
+  .daycolhead.is-today .dnum{ color:#EAF3FE; }
+  .daycolhead .today-badge{
+    display:inline-block; background:#fff; color:var(--blue-deep); font-size:0.62rem; font-weight:700;
+    border-radius:999px; padding:1px 7px; margin-top:3px; font-family:'IBM Plex Mono',monospace;
+  }
   .hourlabel{
     position:sticky; left:0; z-index:3; background:var(--navy); color:#fff;
     font-family:'IBM Plex Mono',monospace; font-size:0.68rem; display:flex; align-items:center;
     justify-content:center; border-right:2px solid rgba(255,255,255,0.15); border-bottom:1px solid var(--paper-line);
   }
-  .hourcell{ border-right:1px solid var(--paper-line); border-bottom:1px solid var(--paper-line); height:42px; cursor:pointer; background:#fff; transition:background .1s ease; }
+  .hourcell{ border-right:1px solid var(--paper-line); border-bottom:1px solid var(--paper-line); height:44px; cursor:pointer; background:#fff; transition:background .12s ease, box-shadow .12s ease; position:relative; }
   .hourcell:hover{ background:var(--teal-soft); }
-  .hourcell.selected{ background:#D6E8FE; }
+  .hourcell.selected{ background:#BFDDFC; box-shadow:inset 0 0 0 2px var(--blue-deep); }
   .hourcell.weekend{ background:#F7F4FE; }
   .hourcell.weekend:hover{ background:var(--teal-soft); }
-  .block{
-    position:absolute; top:3px; bottom:3px; border-radius:7px; display:flex; align-items:flex-start; justify-content:space-between; gap:2px;
-    font-size:0.7rem; font-weight:600; color:#fff; padding:3px 4px; cursor:pointer; overflow:hidden;
-    box-shadow:0 2px 5px rgba(0,0,0,0.15); z-index:1;
+  .hourcell.is-today-col{ background:#F3F8FF; }
+  .hourcell.is-today-col:hover{ background:var(--teal-soft); }
+  .hourcell.is-today-col.selected{ background:#BFDDFC; }
+
+  .now-line{
+    position:absolute; height:2px; background:#E86FAE; z-index:2; pointer-events:none;
+    box-shadow:0 0 4px rgba(232,111,174,0.5);
   }
+  .now-line::before{
+    content:''; position:absolute; left:-5px; top:-4px; width:10px; height:10px;
+    background:#E86FAE; border-radius:50%;
+  }
+  .now-line .now-label{
+    position:absolute; left:6px; top:-9px; background:#E86FAE; color:#fff; font-size:0.6rem;
+    font-family:'IBM Plex Mono',monospace; padding:1px 5px; border-radius:4px; white-space:nowrap;
+  }
+
+  .block{
+    position:absolute; top:3px; bottom:3px; border-radius:6px; display:flex; flex-direction:column; gap:1px;
+    font-size:0.68rem; font-weight:600; color:#fff; padding:4px 6px 4px 8px; cursor:pointer; overflow:hidden;
+    box-shadow:0 2px 6px rgba(22,50,79,0.18); z-index:1; border-left:3px solid rgba(255,255,255,0.7);
+    transition:transform .1s ease, box-shadow .1s ease;
+  }
+  .block:hover{ transform:translateY(-1px); box-shadow:0 4px 10px rgba(22,50,79,0.28); }
+  .block .block-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:2px; }
+  .block .block-time{ font-size:0.6rem; font-weight:500; opacity:0.85; font-family:'IBM Plex Mono',monospace; }
   .block .block-label{ flex:1; word-break:break-word; line-height:1.15; }
   .block .block-check{
     flex:0 0 auto; background:rgba(255,255,255,0.25); border:none; border-radius:4px; color:#fff;
@@ -172,7 +199,11 @@
   .field-row label{ display:block; font-size:0.72rem; color:var(--ink-soft); margin-bottom:4px; font-family:'IBM Plex Mono',monospace; }
   .field-row input, .field-row select{ width:100%; border:1.4px solid var(--paper-line); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:0.85rem; }
   .repeat-row{ display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:0.85rem; color:var(--ink-soft); }
-  .repeat-row input[type=number]{ width:60px; border:1.4px solid var(--paper-line); border-radius:8px; padding:6px 8px; }
+  .day-toggle{
+    flex:1; border:1.4px solid var(--paper-line); background:#fff; color:var(--ink-soft);
+    border-radius:7px; padding:7px 0; font-size:0.75rem; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .day-toggle.active{ background:var(--blue); border-color:var(--blue-deep); color:var(--navy); }
   /* Desktop enhancements — placed last on purpose so they correctly override
      the base (mobile-first) rules above instead of being silently cancelled
      by them due to CSS source order. */
@@ -237,7 +268,7 @@
     <div class="card">
       <h2>Quick Add</h2>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="pill pill-teal" onclick="showTab('planner')">+ Task</button>
+        <button class="pill pill-teal" onclick="openQuickAddModal()">+ Task</button>
         <button class="pill pill-ghost" onclick="showTab('syllabus')">+ Subject / Topic</button>
         <button class="pill pill-ghost" onclick="showTab('wishlist')">+ Wish</button>
         <button class="pill pill-ghost" onclick="alert('Study Sessions (Focus/Pomodoro mode) are coming in the next update.')" title="Coming soon">+ Study Session</button>
@@ -264,7 +295,7 @@
 
   <section class="view" id="view-planner">
     <div class="card">
-      <div class="week-nav">
+      <div class="week-nav" id="week-nav-row">
         <button class="pill pill-nav" onclick="shiftView(-1)">&larr; Prev</button>
         <div class="week-range" id="week-range">Loading...</div>
         <div class="week-nav-btns">
@@ -272,14 +303,25 @@
           <button class="pill pill-nav" onclick="shiftView(1)">Next &rarr;</button>
         </div>
       </div>
-      <div style="display:flex; gap:8px; margin-bottom:14px;">
-        <button class="pill" id="mode-week-btn" onclick="setMode('week')">Week</button>
-        <button class="pill" id="mode-month-btn" onclick="setMode('month')">Month</button>
+      <div style="display:flex; gap:8px; margin-bottom:14px; justify-content:space-between; flex-wrap:wrap;">
+        <div style="display:flex; gap:8px;">
+          <button class="pill" id="mode-week-btn" onclick="setMode('week')">Week</button>
+          <button class="pill" id="mode-month-btn" onclick="setMode('month')">Month</button>
+          <button class="pill" id="mode-routine-btn" onclick="setMode('routine')">Daily Routine</button>
+        </div>
+        <button class="pill pill-teal" onclick="openQuickAddModal()">&#9889; Quick Add</button>
       </div>
       <p class="sub" id="planner-hint">Tap an hour to select it, tap more hours in the same row to extend the range, then add a task. Tap a block to edit, reschedule, or delete it.</p>
 
       <div class="planner-scroll" id="week-wrap"><div class="planner-grid" id="planner-grid"></div></div>
       <div class="month-grid" id="month-grid" style="display:none;"></div>
+
+      <div id="routine-view" style="display:none;">
+        <ul class="topic-list" id="routine-list" style="max-height:none; border-top:1px dashed var(--paper-line);"></ul>
+        <div style="margin-top:14px;">
+          <button class="pill pill-teal" onclick="openRoutineModal()">+ Add Routine Item</button>
+        </div>
+      </div>
 
       <div class="selbar" id="selbar">
         <span id="selbar-text">0 hours selected</span>
@@ -376,18 +418,60 @@
       </div>
     </div>
 
-    <div class="repeat-row" id="repeat-row">
-      <label style="display:flex; align-items:center; gap:6px; font-family:inherit;">
-        <input type="checkbox" id="repeat-checkbox"> Repeat weekly for
-      </label>
-      <input type="number" id="repeat-weeks-input" value="12" min="2" max="52"> weeks
+    <div id="quick-move-row" style="display:none; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+      <button class="pill pill-ghost" onclick="quickMove(1)">+1 Day</button>
+      <button class="pill pill-ghost" onclick="quickMoveToTomorrow()">Tomorrow</button>
+      <button class="pill pill-ghost" onclick="quickMoveToNextMonday()">Next Monday</button>
+    </div>
+
+    <div id="repeat-row" style="margin-bottom:14px;">
+      <label style="display:block; font-size:0.72rem; color:var(--ink-soft); margin-bottom:4px; font-family:'IBM Plex Mono',monospace;">Repeat</label>
+      <select id="repeat-type-input" style="width:100%; border:1.4px solid var(--paper-line); border-radius:8px; padding:9px 10px; font-family:inherit; font-size:0.88rem; margin-bottom:8px;">
+        <option value="none">Does not repeat</option>
+        <option value="daily">Every day</option>
+        <option value="weekdays">Every weekday (Mon\u2013Fri)</option>
+        <option value="weekly">Every week</option>
+        <option value="biweekly">Every 2 weeks</option>
+        <option value="monthly">Every month</option>
+        <option value="custom">Custom days</option>
+      </select>
+
+      <div id="repeat-days-row" style="display:none; gap:5px; margin-bottom:8px;">
+        <button type="button" class="day-toggle" data-day="0">Mon</button>
+        <button type="button" class="day-toggle" data-day="1">Tue</button>
+        <button type="button" class="day-toggle" data-day="2">Wed</button>
+        <button type="button" class="day-toggle" data-day="3">Thu</button>
+        <button type="button" class="day-toggle" data-day="4">Fri</button>
+        <button type="button" class="day-toggle" data-day="5">Sat</button>
+        <button type="button" class="day-toggle" data-day="6">Sun</button>
+      </div>
+
+      <div id="repeat-until-row" style="display:none; align-items:center; gap:8px;">
+        <label style="font-size:0.8rem; color:var(--ink-soft); font-family:inherit; white-space:nowrap;">Until</label>
+        <input type="date" id="repeat-until-input" style="flex:1; border:1.4px solid var(--paper-line); border-radius:8px; padding:7px 8px; font-family:inherit; font-size:0.85rem;">
+        <span style="font-size:0.72rem; color:var(--ink-soft);">(leave blank = up to 1 year)</span>
+      </div>
     </div>
 
     <div class="modal-actions" id="block-modal-actions">
-      <button class="pill pill-rose" id="block-delete-btn" style="display:none;" onclick="deleteBlock('this')">Delete</button>
-      <button class="pill pill-rose" id="block-delete-future-btn" style="display:none;" onclick="deleteBlock('future')">Delete future</button>
+      <button class="pill pill-ghost" id="block-duplicate-btn" style="display:none;" onclick="duplicateBlock()">&#128203; Duplicate</button>
+      <button class="pill pill-rose" id="block-delete-btn" style="display:none;" onclick="confirmDeleteBlock()">Delete</button>
       <button class="pill pill-ghost" onclick="closeBlockModal()">Cancel</button>
       <button class="pill pill-teal" onclick="saveBlock()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="delete-scope-overlay">
+  <div class="modal" style="max-width:360px;">
+    <h3>Delete this task?</h3>
+    <p class="sub" id="delete-scope-label">This task repeats. What do you want to delete?</p>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+      <button class="pill pill-ghost" style="text-align:left;" onclick="deleteBlock('this')">Only this occurrence</button>
+      <button class="pill pill-ghost" style="text-align:left;" onclick="deleteBlock('future')">This and all future occurrences</button>
+    </div>
+    <div class="modal-actions">
+      <button class="pill pill-ghost" onclick="closeDeleteScopeModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -442,6 +526,29 @@ Run a half marathon"></textarea>
     <div class="modal-actions">
       <button class="pill pill-ghost" onclick="closeWishBulkModal()">Cancel</button>
       <button class="pill pill-teal" onclick="saveWishBulk()">Add All</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="routine-overlay">
+  <div class="modal">
+    <h3 id="routine-modal-title">Add Routine Item</h3>
+    <input type="text" id="routine-label-input" placeholder="e.g. Gym, Wake up, SQL Practice">
+    <div class="field-row">
+      <div>
+        <label>Start</label>
+        <select id="routine-start-input"></select>
+      </div>
+      <div>
+        <label>End</label>
+        <select id="routine-end-input"></select>
+      </div>
+    </div>
+    <div class="color-row" id="routine-color-row"></div>
+    <div class="modal-actions">
+      <button class="pill pill-rose" id="routine-delete-btn" style="display:none;" onclick="deleteRoutineItem()">Delete</button>
+      <button class="pill pill-ghost" onclick="closeRoutineModal()">Cancel</button>
+      <button class="pill pill-teal" onclick="saveRoutineItem()">Save</button>
     </div>
   </div>
 </div>
@@ -503,19 +610,30 @@ function setMode(mode){
   viewMode = mode;
   document.getElementById('mode-week-btn').className = 'pill ' + (mode==='week' ? 'mode-active' : 'mode-inactive');
   document.getElementById('mode-month-btn').className = 'pill ' + (mode==='month' ? 'mode-active' : 'mode-inactive');
+  document.getElementById('mode-routine-btn').className = 'pill ' + (mode==='routine' ? 'mode-active' : 'mode-inactive');
   document.getElementById('week-wrap').style.display = mode==='week' ? 'block' : 'none';
   document.getElementById('month-grid').style.display = mode==='month' ? 'grid' : 'none';
+  document.getElementById('routine-view').style.display = mode==='routine' ? 'block' : 'none';
+  document.getElementById('week-nav-row').style.display = mode==='routine' ? 'none' : 'flex';
   document.getElementById('selbar').classList.toggle('show', mode==='week' && selection.hours.size>0);
   document.getElementById('month-selbar').classList.toggle('show', mode==='month' && monthSelection.dates.length>0);
-  document.getElementById('planner-hint').textContent = mode==='week'
-    ? 'Tap an hour to select it, tap more hours in the same row to extend the range, then add a task. Tap a block to edit, reschedule, or delete it.'
-    : 'Tap a day to select it, tap another day to select the range between them, then add a task across all of them. Dots show tasks already scheduled.';
-  if(mode==='month') loadMonth(); else loadWeek();
+  if(mode==='week'){
+    document.getElementById('planner-hint').textContent = 'Tap an hour to select it, tap more hours in the same row to extend the range, then add a task. Tap a block to edit, reschedule, or delete it.';
+  } else if(mode==='month'){
+    document.getElementById('planner-hint').textContent = 'Tap a day to select it, tap another day to select the range between them, then add a task across all of them. Dots show tasks already scheduled.';
+  } else {
+    document.getElementById('planner-hint').textContent = 'Your fixed routine \u2014 the same every day until you delete an item. Use the arrows to reorder.';
+  }
+  if(mode==='month') loadMonth();
+  else if(mode==='routine') loadRoutine();
+  else loadWeek();
 }
 
 function shiftView(n){
   if(viewMode==='week'){ shiftWeek(n); } else { shiftMonth(n); }
 }
+
+let shouldScrollToNowOnNextLoad = true; // scroll to "now" once, on first load
 
 async function loadWeek(){
   document.getElementById('week-range').textContent = fmtRange(weekStart);
@@ -529,6 +647,10 @@ async function loadWeek(){
     setStatus('planner-status','Could not reach the backend — is the server running?');
   }
   buildPlannerGrid();
+  if(shouldScrollToNowOnNextLoad){
+    shouldScrollToNowOnNextLoad = false;
+    setTimeout(scrollToNow, 50);
+  }
 }
 
 function shiftWeek(n){ weekStart = addDays(weekStart, n*7); clearSelectionLocal(); loadWeek(); }
@@ -536,6 +658,7 @@ function goToday(){
   weekStart = startOfWeek(new Date());
   monthCursor = startOfMonth(new Date());
   clearSelectionLocal();
+  shouldScrollToNowOnNextLoad = true;
   if(viewMode==='month') loadMonth(); else loadWeek();
 }
 
@@ -668,6 +791,8 @@ function buildPlannerGrid(){
   const grid = document.getElementById('planner-grid');
   grid.innerHTML = '';
 
+  const todayISO = fmtISO(new Date());
+
   // header row: corner + 7 day columns
   const corner = document.createElement('div');
   corner.className = 'corner';
@@ -677,10 +802,12 @@ function buildPlannerGrid(){
   for(let dIdx=0; dIdx<7; dIdx++){
     const date = addDays(weekStart, dIdx);
     dayDates.push(date);
+    const iso = fmtISO(date);
     const isWeekend = dIdx >= 5; // Sat, Sun (Mon-start week)
+    const isToday = iso === todayISO;
     const head = document.createElement('div');
-    head.className = 'daycolhead' + (isWeekend ? ' weekend' : '');
-    head.innerHTML = `${DAY_ABBR[date.getDay()]}<span class="dnum">${date.getDate()} ${date.toLocaleDateString(undefined,{month:'short'})}</span>`;
+    head.className = 'daycolhead' + (isWeekend ? ' weekend' : '') + (isToday ? ' is-today' : '');
+    head.innerHTML = `${DAY_ABBR[date.getDay()]}<span class="dnum">${date.getDate()} ${date.toLocaleDateString(undefined,{month:'short'})}</span>${isToday ? '<span class="today-badge">TODAY</span>' : ''}`;
     grid.appendChild(head);
   }
 
@@ -695,8 +822,9 @@ function buildPlannerGrid(){
     for(let dIdx=0; dIdx<7; dIdx++){
       const iso = fmtISO(dayDates[dIdx]);
       const isWeekend = dIdx >= 5;
+      const isToday = iso === todayISO;
       const cell = document.createElement('div');
-      cell.className = 'hourcell' + (isWeekend ? ' weekend' : '');
+      cell.className = 'hourcell' + (isWeekend ? ' weekend' : '') + (isToday ? ' is-today-col' : '');
       if(selection.day === iso && selection.hours.has(h)) cell.classList.add('selected');
       cell.addEventListener('click', () => onCellTap(iso, h));
       grid.appendChild(cell);
@@ -731,11 +859,20 @@ function positionBlocks(){
     div.style.opacity = ev.done ? '0.55' : '1';
     div.addEventListener('click', (e)=>{ e.stopPropagation(); openBlockModal(ev.id); });
 
-    const labelSpan = document.createElement('span');
+    const top = document.createElement('div');
+    top.className = 'block-top';
+
+    const textWrap = document.createElement('div');
+    const timeSpan = document.createElement('div');
+    timeSpan.className = 'block-time';
+    timeSpan.textContent = rangeLabel(ev.start_hour, ev.end_hour);
+    textWrap.appendChild(timeSpan);
+    const labelSpan = document.createElement('div');
     labelSpan.className = 'block-label';
     labelSpan.textContent = ev.label;
     if(ev.done) labelSpan.style.textDecoration = 'line-through';
-    div.appendChild(labelSpan);
+    textWrap.appendChild(labelSpan);
+    top.appendChild(textWrap);
 
     const check = document.createElement('button');
     check.className = 'block-check' + (ev.done ? ' checked' : '');
@@ -746,10 +883,56 @@ function positionBlocks(){
       e.stopPropagation();
       toggleEventDone(ev.id, !ev.done);
     });
-    div.appendChild(check);
+    top.appendChild(check);
 
+    div.appendChild(top);
     grid.appendChild(div);
   });
+
+  renderNowLine(grid, timeColW, dayColW, rowH, baseTop);
+}
+
+/* Google-Calendar-style live "now" indicator line across today's column */
+function renderNowLine(grid, timeColW, dayColW, rowH, baseTop){
+  const existing = grid.querySelector('.now-line');
+  if(existing) existing.remove();
+
+  const now = new Date();
+  const todayISO = fmtISO(now);
+  const dIdx = [0,1,2,3,4,5,6].find(i => fmtISO(addDays(weekStart,i)) === todayISO);
+  if(dIdx === undefined) return; // today isn't in the visible week
+
+  const hourFrac = now.getHours() + now.getMinutes()/60;
+  if(hourFrac < START_HOUR || hourFrac > END_HOUR + 1) return; // outside visible hour range
+
+  const line = document.createElement('div');
+  line.className = 'now-line';
+  line.style.left = (timeColW + dIdx*dayColW) + 'px';
+  line.style.width = dayColW + 'px';
+  line.style.top = (baseTop + (hourFrac - START_HOUR)*rowH) + 'px';
+
+  const label = document.createElement('span');
+  label.className = 'now-label';
+  const h12 = now.getHours()%12===0?12:now.getHours()%12;
+  const mins = String(now.getMinutes()).padStart(2,'0');
+  label.textContent = `${h12}:${mins} ${now.getHours()<12?'AM':'PM'}`;
+  line.appendChild(label);
+
+  grid.appendChild(line);
+}
+
+/* Scrolls the week grid so "now" (or a sensible default) is near the top of the visible area */
+function scrollToNow(){
+  const wrap = document.getElementById('week-wrap');
+  const grid = document.getElementById('planner-grid');
+  const firstCell = grid.querySelector('.hourcell');
+  if(!wrap || !firstCell) return;
+  const rowH = firstCell.offsetHeight;
+  const baseTop = firstCell.offsetTop;
+  const now = new Date();
+  const hourFrac = Math.min(Math.max(now.getHours(), START_HOUR), END_HOUR);
+  const targetTop = baseTop + (hourFrac - START_HOUR - 1) * rowH; // ~1 hour of context above "now"
+  wrap.scrollTop = Math.max(0, targetTop);
 }
 
 async function toggleEventDone(eventId, done){
@@ -816,15 +999,41 @@ function populateHourSelect(selectEl){
 }
 
 let monthRangeMode = false;
+let duplicateSourceEvent = null; // when set, saveBlock creates a fresh copy instead of editing
+
+function setupRepeatUI(){
+  const typeSelect = document.getElementById('repeat-type-input');
+  typeSelect.onchange = () => {
+    const isCustom = typeSelect.value === 'custom';
+    document.getElementById('repeat-days-row').style.display = isCustom ? 'flex' : 'none';
+    document.getElementById('repeat-until-row').style.display = typeSelect.value === 'none' ? 'none' : 'flex';
+  };
+  document.querySelectorAll('.day-toggle').forEach(btn => {
+    btn.onclick = () => btn.classList.toggle('active');
+  });
+}
+setupRepeatUI();
+
+function getSelectedRepeatDays(){
+  return [...document.querySelectorAll('.day-toggle.active')].map(b => parseInt(b.dataset.day, 10));
+}
+function resetRepeatUI(){
+  document.getElementById('repeat-type-input').value = 'none';
+  document.getElementById('repeat-days-row').style.display = 'none';
+  document.getElementById('repeat-until-row').style.display = 'none';
+  document.getElementById('repeat-until-input').value = '';
+  document.querySelectorAll('.day-toggle').forEach(b => b.classList.remove('active'));
+}
 
 function openBlockModal(eventId, fromMonthRange){
   const overlay=document.getElementById('block-overlay');
   const title=document.getElementById('block-modal-title');
   const input=document.getElementById('block-label-input');
   const delBtn=document.getElementById('block-delete-btn');
-  const delFutureBtn=document.getElementById('block-delete-future-btn');
+  const dupBtn=document.getElementById('block-duplicate-btn');
   const reschedRow=document.getElementById('reschedule-row');
   const repeatRow=document.getElementById('repeat-row');
+  const quickMoveRow=document.getElementById('quick-move-row');
   const dateInput=document.getElementById('block-date-input');
   const startInput=document.getElementById('block-start-input');
   const endInput=document.getElementById('block-end-input');
@@ -832,14 +1041,17 @@ function openBlockModal(eventId, fromMonthRange){
   populateHourSelect(startInput);
   populateHourSelect(endInput);
   monthRangeMode = !!fromMonthRange;
+  duplicateSourceEvent = null;
+  resetRepeatUI();
 
   if(eventId){
     editingEventId = eventId;
     const ev = events.find(e=>e.id===eventId) || monthEvents.find(e=>e.id===eventId);
     title.textContent='Edit Task'; input.value=ev.label; pendingBlockColor=ev.color;
     delBtn.style.display='inline-block';
-    delFutureBtn.style.display = ev.recurrence_group_id ? 'inline-block' : 'none';
+    dupBtn.style.display='inline-block';
     reschedRow.style.display='flex';
+    quickMoveRow.style.display='flex';
     repeatRow.style.display='none';
     dateInput.value = ev.date;
     dateInput.disabled = false;
@@ -854,7 +1066,8 @@ function openBlockModal(eventId, fromMonthRange){
     editingEventId=null; title.textContent = `Add Task \u2014 ${monthSelection.dates.length} day(s)`;
     input.value=''; pendingBlockColor=PALETTE[0];
     delBtn.style.display='none';
-    delFutureBtn.style.display='none';
+    dupBtn.style.display='none';
+    quickMoveRow.style.display='none';
     repeatRow.style.display='none';
     reschedRow.style.display='flex';
     dateInput.value = monthSelection.dates[0];
@@ -865,15 +1078,34 @@ function openBlockModal(eventId, fromMonthRange){
     if(selection.hours.size===0) return;
     editingEventId=null; title.textContent='Add Task'; input.value=''; pendingBlockColor=PALETTE[0];
     delBtn.style.display='none';
-    delFutureBtn.style.display='none';
+    dupBtn.style.display='none';
+    quickMoveRow.style.display='none';
     reschedRow.style.display='none';
-    repeatRow.style.display='flex';
-    document.getElementById('repeat-checkbox').checked=false;
-    document.getElementById('repeat-weeks-input').value=12;
+    repeatRow.style.display='block';
   }
   buildColorRow('block-color-row',(c)=>{pendingBlockColor=c;},pendingBlockColor);
   overlay.classList.add('show'); setTimeout(()=>input.focus(),50);
 }
+
+// Opens the Add-Task modal pre-filled with today + a sensible next free hour,
+// without requiring the user to pre-select grid cells first ("Quick Add").
+function openQuickAddModal(){
+  const now = new Date();
+  const nextHour = Math.min(Math.max(now.getHours()+1, START_HOUR), END_HOUR-1);
+  selection.day = fmtISO(now);
+  selection.hours = new Set([nextHour]);
+  monthRangeMode = false;
+  editingEventId = null;
+  showTab('planner');
+  setMode('week');
+  weekStart = startOfWeek(now);
+  loadWeek().then(()=>{
+    buildPlannerGrid();
+    updateSelbar();
+    openBlockModal();
+  });
+}
+
 function closeBlockModal(){ document.getElementById('block-overlay').classList.remove('show'); }
 
 async function saveBlock(){
@@ -883,7 +1115,7 @@ async function saveBlock(){
   const end_hour = parseInt(document.getElementById('block-end-input').value,10);
   if(end_hour < start_hour){ alert('End time must be after start time.'); return; }
 
-  if(editingEventId){
+  if(editingEventId && !duplicateSourceEvent){
     const date = document.getElementById('block-date-input').value;
     await fetch(`${API}/api/events/${editingEventId}`, {
       method:'PUT', headers:{'Content-Type':'application/json'},
@@ -893,29 +1125,83 @@ async function saveBlock(){
     for(const iso of monthSelection.dates){
       await fetch(`${API}/api/events`, {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ date: iso, start_hour, end_hour, label, color: pendingBlockColor, repeat_weekly:false })
+        body: JSON.stringify({ date: iso, start_hour, end_hour, label, color: pendingBlockColor, repeat_type:'none' })
       });
     }
     clearMonthSelection();
+  } else if(duplicateSourceEvent){
+    const date = document.getElementById('block-date-input').value;
+    await fetch(`${API}/api/events`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ date, start_hour, end_hour, label, color: pendingBlockColor, repeat_type:'none' })
+    });
+    duplicateSourceEvent = null;
   } else {
     const hrs=[...selection.hours].sort((a,b)=>a-b);
-    const repeat_weekly = document.getElementById('repeat-checkbox').checked;
-    const repeat_weeks = parseInt(document.getElementById('repeat-weeks-input').value,10) || 12;
+    const repeat_type = document.getElementById('repeat-type-input').value;
+    const repeat_days = getSelectedRepeatDays();
+    const repeat_until = document.getElementById('repeat-until-input').value || null;
     await fetch(`${API}/api/events`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         date: selection.day, start_hour: hrs[0], end_hour: hrs[hrs.length-1],
-        label, color: pendingBlockColor, repeat_weekly, repeat_weeks
+        label, color: pendingBlockColor, repeat_type, repeat_days, repeat_until
       })
     });
   }
   clearSelectionLocal(); closeBlockModal();
   if(viewMode==='month') loadMonth(); else loadWeek();
+  loadToday();
 }
+
+function duplicateBlock(){
+  if(!editingEventId) return;
+  const ev = events.find(e=>e.id===editingEventId) || monthEvents.find(e=>e.id===editingEventId);
+  if(!ev) return;
+  duplicateSourceEvent = ev;
+  editingEventId = ev.id; // kept only so the date/start/end fields stay populated; saveBlock branches on duplicateSourceEvent first
+  document.getElementById('block-modal-title').textContent = 'Duplicate Task \u2014 pick a date';
+  document.getElementById('block-delete-btn').style.display = 'none';
+  document.getElementById('block-duplicate-btn').style.display = 'none';
+  document.getElementById('quick-move-row').style.display = 'none';
+  // Leave label/date/time/color as-is so the user just adjusts the date and saves.
+}
+
+function confirmDeleteBlock(){
+  if(!editingEventId) return;
+  const ev = events.find(e=>e.id===editingEventId) || monthEvents.find(e=>e.id===editingEventId);
+  if(ev && ev.recurrence_group_id){
+    document.getElementById('delete-scope-overlay').classList.add('show');
+  } else {
+    deleteBlock('this');
+  }
+}
+function closeDeleteScopeModal(){ document.getElementById('delete-scope-overlay').classList.remove('show'); }
+
 async function deleteBlock(scope){
+  closeDeleteScopeModal();
   if(editingEventId){ await fetch(`${API}/api/events/${editingEventId}?scope=${scope}`, {method:'DELETE'}); }
   closeBlockModal();
   if(viewMode==='month') loadMonth(); else loadWeek();
+  loadToday();
+}
+
+/* ---------------- Quick move (one-click reschedule) ---------------- */
+async function quickMoveBy(days){
+  if(!editingEventId) return;
+  const currentDate = document.getElementById('block-date-input').value;
+  const d = new Date(currentDate+'T00:00:00');
+  d.setDate(d.getDate()+days);
+  document.getElementById('block-date-input').value = fmtISO(d);
+}
+function quickMove(days){ quickMoveBy(days); }
+function quickMoveToTomorrow(){ quickMoveBy(1); }
+function quickMoveToNextMonday(){
+  const currentDate = document.getElementById('block-date-input').value;
+  const d = new Date(currentDate+'T00:00:00');
+  const daysUntilMonday = ((1 - d.getDay()) + 7) % 7 || 7;
+  d.setDate(d.getDate()+daysUntilMonday);
+  document.getElementById('block-date-input').value = fmtISO(d);
 }
 
 /* ---------------- Syllabus ---------------- */
@@ -1037,6 +1323,190 @@ function renderSubjects(){
   const pct = total ? Math.round((done/total)*100) : 0;
   document.getElementById('overall-fill').style.width = pct+'%';
   document.getElementById('overall-label').textContent = `${done} / ${total} topics`;
+}
+
+/* ---------------- Daily Routine ---------------- */
+let routineItems = [];
+let editingRoutineId = null;
+let pendingRoutineColor = PALETTE[0];
+let draggedRoutineId = null;
+let skippedTodayIds = new Set();
+
+async function toggleSkipToday(itemId){
+  await fetch(`${API}/api/routine/${itemId}/skip`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ date: fmtISO(new Date()) })
+  });
+  loadRoutine();
+}
+
+async function loadRoutine(){
+  try{
+    const res = await fetch(`${API}/api/routine`);
+    routineItems = await res.json();
+    const skipRes = await fetch(`${API}/api/routine/skips?date=${fmtISO(new Date())}`);
+    const skipData = await skipRes.json();
+    skippedTodayIds = new Set(skipData.skipped_ids || []);
+  }catch(e){ routineItems = []; skippedTodayIds = new Set(); }
+  renderRoutine();
+}
+
+function renderRoutine(){
+  const list = document.getElementById('routine-list');
+  list.innerHTML = '';
+  if(routineItems.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'topic-empty';
+    empty.textContent = 'No routine items yet \u2014 add one below. It repeats every day until you delete it.';
+    list.appendChild(empty);
+    return;
+  }
+  routineItems.forEach((item, idx) => {
+    const isSkippedToday = skippedTodayIds.has(item.id);
+    const li = document.createElement('li');
+    li.draggable = true;
+    li.dataset.id = item.id;
+    li.style.cursor = 'grab';
+    if(isSkippedToday) li.style.opacity = '0.5';
+    li.innerHTML = `
+      <span style="display:flex; align-items:center; gap:8px; flex:1;">
+        <span class="swatch-dot" style="background:${item.color};"></span>
+        <span style="color:#9aa3af; font-size:0.75rem;">&#9776;</span>
+        <label style="cursor:pointer; ${isSkippedToday ? 'text-decoration:line-through;' : ''}">${rangeLabel(item.start_hour, item.end_hour)} &middot; ${escapeHtml(item.label)}${isSkippedToday ? ' <span style=\"font-size:0.7rem; color:var(--ink-soft); text-decoration:none;\">(skipped today)</span>' : ''}</label>
+      </span>
+    `;
+    li.querySelector('label').addEventListener('click', ()=>openRoutineModal(item.id));
+
+    const skipBtn = document.createElement('button');
+    skipBtn.className = 'pill pill-ghost';
+    skipBtn.style.cssText = 'font-size:0.7rem; padding:5px 10px; margin-right:4px;';
+    skipBtn.textContent = isSkippedToday ? 'Un-skip' : 'Skip today';
+    skipBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleSkipToday(item.id); });
+    li.appendChild(skipBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'del'; delBtn.innerHTML = '&times;';
+    delBtn.addEventListener('click', (e)=>{ e.stopPropagation(); quickDeleteRoutine(item.id); });
+    li.appendChild(delBtn);
+
+    // Drag-and-drop reordering (desktop). Up/down buttons cover mobile/touch.
+    li.addEventListener('dragstart', ()=>{ draggedRoutineId = item.id; li.style.opacity='0.4'; });
+    li.addEventListener('dragend', ()=>{ li.style.opacity = isSkippedToday ? '0.5' : '1'; });
+    li.addEventListener('dragover', (e)=>e.preventDefault());
+    li.addEventListener('drop', (e)=>{
+      e.preventDefault();
+      if(draggedRoutineId === null || draggedRoutineId === item.id) return;
+      reorderRoutineByDrag(draggedRoutineId, item.id);
+    });
+
+    const moveBtns = document.createElement('span');
+    moveBtns.style.cssText = 'display:flex; flex-direction:column; margin-left:4px;';
+    const upBtn = document.createElement('button');
+    upBtn.className = 'del'; upBtn.innerHTML = '&#9650;'; upBtn.style.fontSize='0.6rem';
+    upBtn.style.display = idx===0 ? 'none' : 'block';
+    upBtn.addEventListener('click', (e)=>{ e.stopPropagation(); moveRoutineItem(idx, -1); });
+    const downBtn = document.createElement('button');
+    downBtn.className = 'del'; downBtn.innerHTML = '&#9660;'; downBtn.style.fontSize='0.6rem';
+    downBtn.style.display = idx===routineItems.length-1 ? 'none' : 'block';
+    downBtn.addEventListener('click', (e)=>{ e.stopPropagation(); moveRoutineItem(idx, 1); });
+    moveBtns.appendChild(upBtn); moveBtns.appendChild(downBtn);
+    li.appendChild(moveBtns);
+
+    list.appendChild(li);
+  });
+}
+
+async function persistRoutineOrder(){
+  const ids = routineItems.map(i=>i.id);
+  await fetch(`${API}/api/routine/reorder`, {
+    method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ids})
+  });
+}
+
+function moveRoutineItem(idx, dir){
+  const target = idx + dir;
+  if(target < 0 || target >= routineItems.length) return;
+  const tmp = routineItems[idx];
+  routineItems[idx] = routineItems[target];
+  routineItems[target] = tmp;
+  renderRoutine();
+  persistRoutineOrder();
+}
+
+function reorderRoutineByDrag(draggedId, dropOnId){
+  const fromIdx = routineItems.findIndex(i=>i.id===draggedId);
+  const toIdx = routineItems.findIndex(i=>i.id===dropOnId);
+  if(fromIdx===-1 || toIdx===-1) return;
+  const [moved] = routineItems.splice(fromIdx,1);
+  routineItems.splice(toIdx,0,moved);
+  renderRoutine();
+  persistRoutineOrder();
+}
+
+async function quickDeleteRoutine(id){
+  if(!confirm('Delete this routine item? It will stop repeating.')) return;
+  await fetch(`${API}/api/routine/${id}`, {method:'DELETE'});
+  loadRoutine();
+}
+
+function openRoutineModal(itemId){
+  const title = document.getElementById('routine-modal-title');
+  const input = document.getElementById('routine-label-input');
+  const delBtn = document.getElementById('routine-delete-btn');
+  const startInput = document.getElementById('routine-start-input');
+  const endInput = document.getElementById('routine-end-input');
+  populateHourSelect(startInput);
+  populateHourSelect(endInput);
+
+  if(itemId){
+    editingRoutineId = itemId;
+    const item = routineItems.find(i=>i.id===itemId);
+    title.textContent = 'Edit Routine Item';
+    input.value = item.label;
+    pendingRoutineColor = item.color;
+    startInput.value = item.start_hour;
+    endInput.value = item.end_hour;
+    delBtn.style.display = 'inline-block';
+  } else {
+    editingRoutineId = null;
+    title.textContent = 'Add Routine Item';
+    input.value = '';
+    pendingRoutineColor = PALETTE[0];
+    startInput.value = 6;
+    endInput.value = 7;
+    delBtn.style.display = 'none';
+  }
+  buildColorRow('routine-color-row', (c)=>{pendingRoutineColor=c;}, pendingRoutineColor);
+  document.getElementById('routine-overlay').classList.add('show');
+  setTimeout(()=>input.focus(), 50);
+}
+function closeRoutineModal(){ document.getElementById('routine-overlay').classList.remove('show'); }
+
+async function saveRoutineItem(){
+  const label = document.getElementById('routine-label-input').value.trim();
+  if(!label) return;
+  const start_hour = parseInt(document.getElementById('routine-start-input').value,10);
+  const end_hour = parseInt(document.getElementById('routine-end-input').value,10);
+  if(end_hour < start_hour){ alert('End time must be after start time.'); return; }
+
+  if(editingRoutineId){
+    await fetch(`${API}/api/routine/${editingRoutineId}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({label, color: pendingRoutineColor, start_hour, end_hour})
+    });
+  } else {
+    await fetch(`${API}/api/routine`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({label, color: pendingRoutineColor, start_hour, end_hour})
+    });
+  }
+  closeRoutineModal();
+  loadRoutine();
+}
+async function deleteRoutineItem(){
+  if(editingRoutineId){ await fetch(`${API}/api/routine/${editingRoutineId}`, {method:'DELETE'}); }
+  closeRoutineModal();
+  loadRoutine();
 }
 
 /* ---------------- Wish List ---------------- */
@@ -1391,6 +1861,8 @@ loadWeek();
 loadSubjects();
 loadToday();
 window.addEventListener('resize', positionBlocks);
+// Keep the "now" line accurate without a full reload, checked every minute.
+setInterval(()=>{ if(viewMode==='week') positionBlocks(); }, 60000);
 </script>
 </body>
 </html>

@@ -9,8 +9,10 @@ class EventCreate(BaseModel):
     end_hour: int
     label: str
     color: str = "#0E7C86"
-    repeat_weekly: bool = False
-    repeat_weeks: int = 12  # how many weeks total (including the first) when repeat_weekly is true
+    # Repeat presets: none | daily | weekdays | weekly | biweekly | monthly | custom
+    repeat_type: str = "none"
+    repeat_days: List[int] = []  # 0=Mon..6=Sun, used only when repeat_type == "custom"
+    repeat_until: Optional[Date] = None  # if not set, capped at 1 year out for safety
 
 
 class EventUpdate(BaseModel):
@@ -79,3 +81,37 @@ class WishOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class RoutineCreate(BaseModel):
+    start_hour: int
+    end_hour: int
+    label: str
+    color: str = "#5B9BF0"
+
+
+class RoutineUpdate(BaseModel):
+    start_hour: Optional[int] = None
+    end_hour: Optional[int] = None
+    label: Optional[str] = None
+    color: Optional[str] = None
+
+
+class RoutineOut(BaseModel):
+    id: int
+    start_hour: int
+    end_hour: int
+    label: str
+    color: str
+    sort_order: int
+
+    class Config:
+        from_attributes = True
+
+
+class RoutineReorder(BaseModel):
+    ids: List[int]  # full list of routine item ids in the new desired order
+
+
+class RoutineSkipCreate(BaseModel):
+    date: Date

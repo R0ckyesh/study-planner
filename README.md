@@ -96,6 +96,23 @@ The app has a real login page (not a browser popup) with a signed session cookie
 
 Since it's one shared password rather than separate accounts, anyone you give it to has full access to everything — fine for "just me" or "me and a friend I trust with edit access," not meant for a public/multi-user rollout. Say the word if you want proper separate logins instead.
 
+## Task workflow (Quick Add, repeats, duplicate, move)
+
+- **Quick Add** (the lightning-bolt button) opens the Add Task modal directly, pre-filled with today's date and the next free hour — no need to tap a grid cell first.
+- **Repeat presets** when adding a task: Does not repeat, Every day, Every weekday, Every week, Every 2 weeks, Every month, or Custom days (pick any combination, e.g. Mon/Wed/Fri). Recurrence runs up to 1 year out by default, or until a date you set.
+- **Duplicate** an existing task from its edit modal — keeps the label, time, and color, you just pick a new date.
+- **Move** an existing task with one tap: +1 Day, Tomorrow, or Next Monday, right from the edit modal — no retyping the date.
+- **Delete** on a repeating task asks whether to delete just that occurrence or that one and all future ones in the series.
+
+One honest limitation: recurring tasks are still stored as individual rows per occurrence (not a single "recurring rule" your app expands on the fly). That's simple and works well up to the 1-year cap, but means there's no "pause a recurring series" or "edit the whole series at once" yet — editing/deleting always acts on individual occurrences or "this and future," not the full series retroactively. A proper `RecurringTask` rule-based table would be the next architectural step if that becomes limiting.
+
+## Daily Routine vs. Weekly Planner
+
+Two different tools for two different kinds of schedule, both in the Weekly Planner tab (toggle at the top: Week / Month / Daily Routine):
+
+- **Weekly Planner (Week/Month views)** — date-specific tasks. "Study DBMS on Tuesday Aug 25, 9-11am." Tied to real calendar dates.
+- **Daily Routine** — a fixed set of time blocks that apply **every day**, with no date attached at all. "Wake up + exercise, 6-7am" shows up daily until you delete it — you're not re-adding it each day. Reorder items with the up/down arrows (or drag on desktop) to control the order they're prioritized/displayed in. **Skip today** on any item to opt out just for today without deleting it — it comes back automatically tomorrow.
+
 ## Bulk-importing a syllabus (auto-segregated into subjects)
 
 On the Syllabus Tracker tab there's a **Bulk Import** box. Paste your whole syllabus at once:

@@ -187,33 +187,77 @@ def list_events(
     )
 
 
+def compute_occurrence_dates(start_date, repeat_type, repeat_days, repeat_until):
+    """Returns the list of dates an event should be created on. Always
+    includes start_date itself. 'Never'-ending repeats are capped at 1 year
+    out — true unbounded recurrence would need generating occurrences
+    on-the-fly from a rule rather than pre-creating rows, which is a bigger
+    architecture change than this pass makes (see README for the note)."""
+    dates = [start_date]
+    if repeat_type == "none":
+        return dates
+
+    hard_cap = start_date + datetime.timedelta(days=365)
+    max_end = min(repeat_until, hard_cap) if repeat_until else hard_cap
+
+    if repeat_type == "monthly":
+        cursor = start_date
+        while len(dates) < 60:
+            month = cursor.month + 1
+            year = cursor.year + (month - 1) // 12
+            month = ((month - 1) % 12) + 1
+            day = min(start_date.day, 28)  # clamp to avoid invalid dates (e.g. Feb 30)
+            cursor = datetime.date(year, month, day)
+            if cursor > max_end:
+                break
+            dates.append(cursor)
+        return dates
+
+    cursor = start_date + datetime.timedelta(days=1)
+    while cursor <= max_end and len(dates) < 366:
+        weekday = cursor.weekday()  # Mon=0 .. Sun=6
+        include = False
+        if repeat_type == "daily":
+            include = True
+        elif repeat_type == "weekdays":
+            include = weekday < 5
+        elif repeat_type == "weekly":
+            include = weekday == start_date.weekday()
+        elif repeat_type == "biweekly":
+            include = weekday == start_date.weekday() and ((cursor - start_date).days // 7) % 2 == 0
+        elif repeat_type == "custom":
+            include = weekday in repeat_days
+        if include:
+            dates.append(cursor)
+        cursor += datetime.timedelta(days=1)
+    return dates
+
+
 @app.post("/api/events", response_model=schemas.EventOut)
 def create_event(payload: schemas.EventCreate, db: Session = Depends(get_db)):
     data = payload.dict()
-    repeat_weekly = data.pop("repeat_weekly")
-    repeat_weeks = max(1, min(data.pop("repeat_weeks"), 52))
+    repeat_type = data.pop("repeat_type")
+    repeat_days = data.pop("repeat_days")
+    repeat_until = data.pop("repeat_until")
 
-    group_id = None
-    if repeat_weekly and repeat_weeks > 1:
-        group_id = str(uuid.uuid4())
+    dates = compute_occurrence_dates(data["date"], repeat_type, repeat_days, repeat_until)
+    group_id = str(uuid.uuid4()) if len(dates) > 1 else None
 
-    first_event = models.PlannerEvent(**data, recurrence_group_id=group_id)
-    db.add(first_event)
+    first_event = None
+    for d in dates:
+        event = models.PlannerEvent(
+            date=d,
+            start_hour=data["start_hour"],
+            end_hour=data["end_hour"],
+            label=data["label"],
+            color=data["color"],
+            recurrence_group_id=group_id,
+        )
+        db.add(event)
+        if first_event is None:
+            first_event = event
     db.commit()
     db.refresh(first_event)
-
-    if repeat_weekly and repeat_weeks > 1:
-        for i in range(1, repeat_weeks):
-            db.add(models.PlannerEvent(
-                date=data["date"] + datetime.timedelta(weeks=i),
-                start_hour=data["start_hour"],
-                end_hour=data["end_hour"],
-                label=data["label"],
-                color=data["color"],
-                recurrence_group_id=group_id,
-            ))
-        db.commit()
-
     return first_event
 
 
@@ -375,6 +419,87 @@ def delete_wish(wish_id: int, db: Session = Depends(get_db)):
     db.delete(wish)
     db.commit()
     return {"ok": True}
+
+
+# ============================================================
+# Daily Routine (recurring, not tied to any date — applies every day
+# until deleted; order is user-controlled)
+# ============================================================
+
+@app.get("/api/routine", response_model=List[schemas.RoutineOut])
+def list_routine(db: Session = Depends(get_db)):
+    return db.query(models.RoutineItem).order_by(models.RoutineItem.sort_order, models.RoutineItem.start_hour).all()
+
+
+@app.post("/api/routine", response_model=schemas.RoutineOut)
+def create_routine(payload: schemas.RoutineCreate, db: Session = Depends(get_db)):
+    max_order = db.query(func.max(models.RoutineItem.sort_order)).scalar() or 0
+    item = models.RoutineItem(**payload.dict(), sort_order=max_order + 1)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@app.put("/api/routine/reorder")
+def reorder_routine(payload: schemas.RoutineReorder, db: Session = Depends(get_db)):
+    for idx, item_id in enumerate(payload.ids):
+        item = db.get(models.RoutineItem, item_id)
+        if item:
+            item.sort_order = idx
+    db.commit()
+    return {"ok": True}
+
+
+@app.put("/api/routine/{item_id}", response_model=schemas.RoutineOut)
+def update_routine(item_id: int, payload: schemas.RoutineUpdate, db: Session = Depends(get_db)):
+    item = db.get(models.RoutineItem, item_id)
+    if not item:
+        raise HTTPException(404, "Routine item not found")
+    data = payload.dict(exclude_unset=True)
+    for key, value in data.items():
+        setattr(item, key, value)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@app.delete("/api/routine/{item_id}")
+def delete_routine(item_id: int, db: Session = Depends(get_db)):
+    item = db.get(models.RoutineItem, item_id)
+    if not item:
+        raise HTTPException(404, "Routine item not found")
+    db.delete(item)
+    db.commit()
+    return {"ok": True}
+
+
+@app.get("/api/routine/skips")
+def list_routine_skips(date: datetime.date = Query(...), db: Session = Depends(get_db)):
+    """Which routine items are skipped on a given date."""
+    skips = db.query(models.RoutineSkip).filter(models.RoutineSkip.date == date).all()
+    return {"skipped_ids": [s.routine_item_id for s in skips]}
+
+
+@app.post("/api/routine/{item_id}/skip")
+def toggle_routine_skip(item_id: int, payload: schemas.RoutineSkipCreate, db: Session = Depends(get_db)):
+    """Skip (or un-skip, if already skipped) a routine item for one date.
+    The item itself is untouched and reappears normally on other days."""
+    item = db.get(models.RoutineItem, item_id)
+    if not item:
+        raise HTTPException(404, "Routine item not found")
+    existing = (
+        db.query(models.RoutineSkip)
+        .filter(models.RoutineSkip.routine_item_id == item_id, models.RoutineSkip.date == payload.date)
+        .first()
+    )
+    if existing:
+        db.delete(existing)
+        db.commit()
+        return {"skipped": False}
+    db.add(models.RoutineSkip(routine_item_id=item_id, date=payload.date))
+    db.commit()
+    return {"skipped": True}
 
 
 # ============================================================
