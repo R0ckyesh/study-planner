@@ -90,7 +90,7 @@
   .hourcell{ border-right:1px solid var(--paper-line); border-bottom:1px solid var(--paper-line); height:44px; cursor:pointer; background:#fff; transition:background .12s ease, box-shadow .12s ease; position:relative; }
   .hourcell:hover{ background:var(--teal-soft); }
   .hourcell.selected{ background:#BFDDFC; box-shadow:inset 0 0 0 2px var(--blue-deep); }
-  .hourcell.weekend{ background:#F7F4FE; }
+  .hourcell.weekend{ background:#FBFAFE; }
   .hourcell.weekend:hover{ background:var(--teal-soft); }
   .hourcell.is-today-col{ background:#F3F8FF; }
   .hourcell.is-today-col:hover{ background:var(--teal-soft); }
@@ -582,7 +582,17 @@ function startOfWeek(d){
   date.setHours(0,0,0,0);
   return date;
 }
-function fmtISO(d){ return d.toISOString().slice(0,10); }
+function fmtISO(d){
+  // Use LOCAL calendar date components, not toISOString() (which converts
+  // to UTC first). For timezones ahead of UTC — e.g. India, UTC+5:30 — a
+  // local midnight instant falls on the PREVIOUS UTC day, so toISOString()
+  // silently returned the wrong date for every day column, which fed into
+  // both the "Today" highlight AND which date got saved when adding a task.
+  const year = d.getFullYear();
+  const month = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${year}-${month}-${day}`;
+}
 function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
 function fmtRange(start){
   const end = addDays(start,6);
@@ -618,7 +628,7 @@ function setMode(mode){
   document.getElementById('selbar').classList.toggle('show', mode==='week' && selection.hours.size>0);
   document.getElementById('month-selbar').classList.toggle('show', mode==='month' && monthSelection.dates.length>0);
   if(mode==='week'){
-    document.getElementById('planner-hint').textContent = 'Tap an hour to select it, tap more hours in the same row to extend the range, then add a task. Tap a block to edit, reschedule, or delete it.';
+    document.getElementById('planner-hint').textContent = 'Tap an hour to select it, tap more hours in the same row to extend the range, then add a task. Tap a block to edit, reschedule, or delete it. (Weekend columns are lightly shaded, and today\'s column is highlighted blue with a live time marker.)';
   } else if(mode==='month'){
     document.getElementById('planner-hint').textContent = 'Tap a day to select it, tap another day to select the range between them, then add a task across all of them. Dots show tasks already scheduled.';
   } else {
