@@ -96,6 +96,19 @@ The app has a real login page (not a browser popup) with a signed session cookie
 
 Since it's one shared password rather than separate accounts, anyone you give it to has full access to everything — fine for "just me" or "me and a friend I trust with edit access," not meant for a public/multi-user rollout. Say the word if you want proper separate logins instead.
 
+## Weight Tracker
+
+A new tab for logging bodyweight over time, with BMI, calorie target, and protein target calculated from standard public formulas:
+
+- **BMI** — WHO weight/height² bands (Underweight / Normal / Overweight / Obese)
+- **BMR** — Mifflin-St Jeor equation (the modern standard, more accurate than the older Harris-Benedict formula)
+- **Calorie target** — your BMR × an activity multiplier (TDEE), minus a deficit sized to your chosen weekly pace (0.25 / 0.5 / 0.75 kg/week, using the standard ~7700 kcal ≈ 1 kg body fat conversion)
+- **Protein target** — 1.6–2.2 g per kg bodyweight (a common range for preserving muscle during a calorie deficit), with 1.8 g/kg shown as the headline recommendation
+
+**Built-in safety floor:** the calorie target can never compute below 1500 kcal (men) or 1200 kcal (women), regardless of how aggressive the chosen deficit pace is. If your inputs would produce a lower number, the app clamps to the floor and tells you so, rather than silently suggesting an unsafe number.
+
+**Important:** these are estimates from standard formulas, not medical advice. Please check with a doctor or dietitian before following a calorie or protein target, especially at a faster deficit pace or if you have any health conditions.
+
 ## Task workflow (Quick Add, repeats, duplicate, move)
 
 - **Quick Add** (the lightning-bolt button) opens the Add Task modal directly, pre-filled with today's date and the next free hour — no need to tap a grid cell first.

@@ -503,6 +503,67 @@ def toggle_routine_skip(item_id: int, payload: schemas.RoutineSkipCreate, db: Se
 
 
 # ============================================================
+# Weight tracking (entries + profile inputs for BMI/calorie/protein math)
+# ============================================================
+
+@app.get("/api/weight-entries", response_model=List[schemas.WeightEntryOut])
+def list_weight_entries(db: Session = Depends(get_db)):
+    return db.query(models.WeightEntry).order_by(models.WeightEntry.date).all()
+
+
+@app.post("/api/weight-entries", response_model=schemas.WeightEntryOut)
+def create_weight_entry(payload: schemas.WeightEntryCreate, db: Session = Depends(get_db)):
+    # One entry per date: if today's already logged, update it rather than duplicate.
+    existing = db.query(models.WeightEntry).filter(models.WeightEntry.date == payload.date).first()
+    if existing:
+        existing.weight_kg = payload.weight_kg
+        db.commit()
+        db.refresh(existing)
+        return existing
+    entry = models.WeightEntry(date=payload.date, weight_kg=payload.weight_kg)
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return entry
+
+
+@app.delete("/api/weight-entries/{entry_id}")
+def delete_weight_entry(entry_id: int, db: Session = Depends(get_db)):
+    entry = db.get(models.WeightEntry, entry_id)
+    if not entry:
+        raise HTTPException(404, "Weight entry not found")
+    db.delete(entry)
+    db.commit()
+    return {"ok": True}
+
+
+@app.get("/api/weight-profile", response_model=schemas.WeightProfileOut)
+def get_weight_profile(db: Session = Depends(get_db)):
+    profile = db.get(models.WeightProfile, 1)
+    if not profile:
+        profile = models.WeightProfile(id=1)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+    return profile
+
+
+@app.put("/api/weight-profile", response_model=schemas.WeightProfileOut)
+def update_weight_profile(payload: schemas.WeightProfileUpdate, db: Session = Depends(get_db)):
+    profile = db.get(models.WeightProfile, 1)
+    if not profile:
+        profile = models.WeightProfile(id=1)
+        db.add(profile)
+    data = payload.dict(exclude_unset=True)
+    for key, value in data.items():
+        setattr(profile, key, value)
+    profile.updated_at = datetime.datetime.utcnow()
+    db.commit()
+    db.refresh(profile)
+    return profile
+
+
+# ============================================================
 # History (for "historical data of completed" tracking)
 # ============================================================
 

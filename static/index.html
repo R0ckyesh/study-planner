@@ -164,6 +164,14 @@
   .history-list .hd{ font-family:'IBM Plex Mono',monospace; color:var(--ink-soft); }
   .history-list .hc{ font-weight:700; color:var(--teal); }
 
+  .weight-stat{
+    background:var(--paper); border-radius:10px; padding:14px; text-align:center;
+    border:1px solid var(--paper-line);
+  }
+  .weight-stat-label{ font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--ink-soft); margin-bottom:4px; }
+  .weight-stat-value{ font-family:'Fraunces',serif; font-size:1.3rem; font-weight:700; color:var(--navy); }
+  .weight-stat-sub{ font-size:0.7rem; color:var(--ink-soft); margin-top:2px; }
+
   .overlay{ display:none; position:fixed; inset:0; background:rgba(22,50,79,0.45); align-items:flex-end; justify-content:center; z-index:50; }
   .overlay.show{ display:flex; }
   .modal{ background:#fff; width:100%; max-width:420px; border-radius:16px 16px 0 0; padding:20px 20px 26px; }
@@ -236,6 +244,7 @@
     <button class="tab" id="tab-syllabus" onclick="showTab('syllabus')">&#128218; Syllabus Tracker</button>
     <button class="tab" id="tab-wishlist" onclick="showTab('wishlist')">&#10024; Wish List</button>
     <button class="tab" id="tab-history" onclick="showTab('history')">&#128202; History</button>
+    <button class="tab" id="tab-weight" onclick="showTab('weight')">&#9878;&#65039; Weight</button>
   </div>
 </div>
 
@@ -391,6 +400,106 @@
         <button class="pill mode-inactive" id="hist-filter-tasks" onclick="setHistoryFilter('tasks')">Tasks</button>
       </div>
       <ul class="history-list" id="history-list"></ul>
+    </div>
+  </section>
+
+  <section class="view" id="view-weight">
+    <div class="card">
+      <h2>&#9878;&#65039; Weight Tracker</h2>
+      <p class="sub">
+        BMI, calorie, and protein numbers below use standard public formulas (Mifflin-St Jeor for calorie needs,
+        WHO BMI bands) &mdash; they're a starting estimate, not medical advice. Please check with a doctor or
+        dietitian before following a calorie target, especially for a faster deficit.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Your Details</h2>
+      <p class="sub">Needed once to calculate BMI, calorie, and protein targets. Update anytime.</p>
+      <div class="field-row">
+        <div>
+          <label>Height (cm)</label>
+          <input type="number" id="wp-height" placeholder="e.g. 175">
+        </div>
+        <div>
+          <label>Age</label>
+          <input type="number" id="wp-age" placeholder="e.g. 25">
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label>Sex</label>
+          <select id="wp-sex">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div>
+          <label>Activity level</label>
+          <select id="wp-activity">
+            <option value="sedentary">Sedentary</option>
+            <option value="light">Light (1-3 days/wk)</option>
+            <option value="moderate">Moderate (3-5 days/wk)</option>
+            <option value="very_active">Very active (6-7 days/wk)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label>Target weight (kg)</label>
+          <input type="number" id="wp-target" placeholder="e.g. 72">
+        </div>
+        <div>
+          <label>Deficit pace</label>
+          <select id="wp-deficit">
+            <option value="gentle">Gentle (~0.25 kg/wk)</option>
+            <option value="standard">Standard (~0.5 kg/wk)</option>
+            <option value="faster">Faster (~0.75 kg/wk)</option>
+          </select>
+        </div>
+      </div>
+      <button class="pill pill-teal" onclick="saveWeightProfile()">Save Details</button>
+      <span id="wp-save-status" class="status-msg" style="padding:0 0 0 10px;"></span>
+    </div>
+
+    <div class="card" id="weight-summary-card" style="display:none;">
+      <h2>Summary</h2>
+      <div class="subject-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px;">
+        <div class="weight-stat"><div class="weight-stat-label">Current Weight</div><div class="weight-stat-value" id="ws-current-weight">&ndash;</div></div>
+        <div class="weight-stat"><div class="weight-stat-label">BMI</div><div class="weight-stat-value" id="ws-bmi">&ndash;</div><div class="weight-stat-sub" id="ws-bmi-cat"></div></div>
+        <div class="weight-stat"><div class="weight-stat-label">Target Weight</div><div class="weight-stat-value" id="ws-target">&ndash;</div><div class="weight-stat-sub" id="ws-to-go"></div></div>
+        <div class="weight-stat"><div class="weight-stat-label">Daily Calories</div><div class="weight-stat-value" id="ws-calories">&ndash;</div><div class="weight-stat-sub" id="ws-cal-note"></div></div>
+        <div class="weight-stat"><div class="weight-stat-label">Daily Protein</div><div class="weight-stat-value" id="ws-protein">&ndash;</div><div class="weight-stat-sub" id="ws-protein-range"></div></div>
+      </div>
+      <p class="sub" id="ws-formula-detail" style="margin-top:14px;"></p>
+    </div>
+
+    <div class="card">
+      <h2>Weight &amp; BMI Over Time</h2>
+      <div id="weight-chart-wrap" style="width:100%; overflow-x:auto;">
+        <svg id="weight-chart" width="100%" height="220" style="min-width:320px;"></svg>
+      </div>
+      <div class="legend-row" style="margin-top:8px;">
+        <span class="swatch-chip"><span class="swatch-dot" style="background:#5B9BF0;"></span>Weight (kg)</span>
+        <span class="swatch-chip"><span class="swatch-dot" style="background:#E86FAE;"></span>BMI</span>
+        <span class="swatch-chip"><span class="swatch-dot" style="background:#34A374;"></span>Target weight</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Log Weight</h2>
+      <div class="field-row">
+        <div>
+          <label>Date</label>
+          <input type="date" id="we-date-input">
+        </div>
+        <div>
+          <label>Weight (kg)</label>
+          <input type="number" step="0.1" id="we-weight-input" placeholder="e.g. 79.5">
+        </div>
+      </div>
+      <button class="pill pill-teal" onclick="addWeightEntry()">Log Weight</button>
+      <ul class="topic-list" id="weight-entry-list" style="max-height:none; border-top:1px dashed var(--paper-line); margin-top:14px;"></ul>
     </div>
   </section>
 </main>
@@ -601,13 +710,14 @@ function fmtRange(start){
 }
 
 function showTab(name){
-  ['today','planner','syllabus','wishlist','history'].forEach(n=>{
+  ['today','planner','syllabus','wishlist','history','weight'].forEach(n=>{
     document.getElementById('view-'+n).classList.toggle('active', n===name);
     document.getElementById('tab-'+n).classList.toggle('active', n===name);
   });
   if(name==='history') loadHistory();
   if(name==='wishlist') loadWishes();
   if(name==='today') loadToday();
+  if(name==='weight') loadWeightTab();
 }
 
 /* ---------------- Weekly planner ---------------- */
@@ -1664,6 +1774,277 @@ function renderHistory(){
 }
 
 function escapeHtml(str){ const div=document.createElement('div'); div.textContent=str; return div.innerHTML; }
+
+/* ============================================================
+   Weight Tracker — BMI / BMR / calorie / protein math.
+   Formulas used (shown in-app for transparency, not medical advice):
+   - BMI = weight_kg / height_m^2 (WHO bands)
+   - BMR = Mifflin-St Jeor equation
+   - TDEE = BMR * activity multiplier
+   - Deficit: 7700 kcal ≈ 1kg body fat (standard rounded figure)
+   - Calorie target is floor-clamped (1500 kcal men / 1200 kcal women)
+     so a large requested deficit can never compute below a conservative
+     safety minimum — if the raw math would go lower, the floor wins and
+     the app says so, rather than silently recommending an unsafe number.
+   - Protein: 1.6–2.2 g/kg bodyweight (recommended: 1.8 g/kg) — common
+     range for a cut while preserving muscle.
+   ============================================================ */
+const ACTIVITY_MULTIPLIERS = { sedentary:1.2, light:1.375, moderate:1.55, very_active:1.725 };
+const ACTIVITY_LABELS = { sedentary:'Sedentary', light:'Light', moderate:'Moderate', very_active:'Very active' };
+const DEFICIT_KG_PER_WEEK = { gentle:0.25, standard:0.5, faster:0.75 };
+const KCAL_PER_KG_FAT = 7700;
+
+let weightProfile = null;
+let weightEntries = [];
+
+function calcBMI(weightKg, heightCm){
+  const heightM = heightCm/100;
+  return weightKg / (heightM*heightM);
+}
+function bmiCategory(bmi){
+  if(bmi < 18.5) return 'Underweight';
+  if(bmi < 25) return 'Normal';
+  if(bmi < 30) return 'Overweight';
+  return 'Obese';
+}
+function calcBMR(weightKg, heightCm, age, sex){
+  const base = 10*weightKg + 6.25*heightCm - 5*age;
+  return sex === 'male' ? base + 5 : base - 161;
+}
+function calcCalorieTarget(bmr, activityLevel, deficitLevel, sex){
+  const tdee = bmr * (ACTIVITY_MULTIPLIERS[activityLevel] || 1.2);
+  const dailyDeficit = (DEFICIT_KG_PER_WEEK[deficitLevel] || 0.5) * KCAL_PER_KG_FAT / 7;
+  const rawTarget = tdee - dailyDeficit;
+  const floor = sex === 'male' ? 1500 : 1200;
+  const target = Math.max(rawTarget, floor);
+  return { tdee, dailyDeficit, rawTarget, target, floorApplied: rawTarget < floor };
+}
+function calcProteinTarget(weightKg){
+  return { low: weightKg*1.6, high: weightKg*2.2, recommended: weightKg*1.8 };
+}
+
+async function loadWeightTab(){
+  try{
+    const [profileRes, entriesRes] = await Promise.all([
+      fetch(`${API}/api/weight-profile`),
+      fetch(`${API}/api/weight-entries`),
+    ]);
+    weightProfile = await profileRes.json();
+    weightEntries = await entriesRes.json();
+  }catch(e){ weightProfile = null; weightEntries = []; }
+
+  if(weightProfile){
+    document.getElementById('wp-height').value = weightProfile.height_cm ?? '';
+    document.getElementById('wp-age').value = weightProfile.age ?? '';
+    document.getElementById('wp-sex').value = weightProfile.sex || 'male';
+    document.getElementById('wp-activity').value = weightProfile.activity_level || 'sedentary';
+    document.getElementById('wp-target').value = weightProfile.target_weight_kg ?? '';
+    document.getElementById('wp-deficit').value = weightProfile.deficit_level || 'standard';
+  }
+  if(!document.getElementById('we-date-input').value){
+    document.getElementById('we-date-input').value = fmtISO(new Date());
+  }
+
+  renderWeightSummary();
+  renderWeightEntryList();
+  renderWeightChart();
+}
+
+async function saveWeightProfile(){
+  const height_cm = parseFloat(document.getElementById('wp-height').value) || null;
+  const age = parseInt(document.getElementById('wp-age').value,10) || null;
+  const sex = document.getElementById('wp-sex').value;
+  const activity_level = document.getElementById('wp-activity').value;
+  const target_weight_kg = parseFloat(document.getElementById('wp-target').value) || null;
+  const deficit_level = document.getElementById('wp-deficit').value;
+
+  const res = await fetch(`${API}/api/weight-profile`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ height_cm, age, sex, activity_level, target_weight_kg, deficit_level })
+  });
+  weightProfile = await res.json();
+  document.getElementById('wp-save-status').textContent = 'Saved.';
+  setTimeout(()=>{ document.getElementById('wp-save-status').textContent=''; }, 2000);
+  renderWeightSummary();
+  renderWeightChart();
+}
+
+async function addWeightEntry(){
+  const date = document.getElementById('we-date-input').value;
+  const weight_kg = parseFloat(document.getElementById('we-weight-input').value);
+  if(!date || !weight_kg) return;
+  await fetch(`${API}/api/weight-entries`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ date, weight_kg })
+  });
+  document.getElementById('we-weight-input').value = '';
+  loadWeightTab();
+}
+async function deleteWeightEntry(id){
+  await fetch(`${API}/api/weight-entries/${id}`, {method:'DELETE'});
+  loadWeightTab();
+}
+
+function renderWeightEntryList(){
+  const list = document.getElementById('weight-entry-list');
+  list.innerHTML = '';
+  if(weightEntries.length === 0){
+    list.innerHTML = '<div class="topic-empty">No entries yet — log your first weight above.</div>';
+    return;
+  }
+  [...weightEntries].reverse().forEach(entry=>{
+    const li = document.createElement('li');
+    const d = new Date(entry.date+'T00:00:00');
+    li.innerHTML = `<label style="flex:1;">${d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})} &mdash; <strong>${entry.weight_kg} kg</strong></label>`;
+    const del = document.createElement('button');
+    del.className='del'; del.innerHTML='&times;';
+    del.addEventListener('click', ()=>deleteWeightEntry(entry.id));
+    li.appendChild(del);
+    list.appendChild(li);
+  });
+}
+
+function renderWeightSummary(){
+  const card = document.getElementById('weight-summary-card');
+  if(!weightProfile || !weightProfile.height_cm || !weightProfile.age || weightEntries.length===0){
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+
+  const latest = weightEntries[weightEntries.length-1];
+  const bmi = calcBMI(latest.weight_kg, weightProfile.height_cm);
+  const bmr = calcBMR(latest.weight_kg, weightProfile.height_cm, weightProfile.age, weightProfile.sex);
+  const cal = calcCalorieTarget(bmr, weightProfile.activity_level, weightProfile.deficit_level, weightProfile.sex);
+  const protein = calcProteinTarget(latest.weight_kg);
+
+  document.getElementById('ws-current-weight').textContent = latest.weight_kg + ' kg';
+  document.getElementById('ws-bmi').textContent = bmi.toFixed(1);
+  document.getElementById('ws-bmi-cat').textContent = bmiCategory(bmi);
+
+  if(weightProfile.target_weight_kg){
+    document.getElementById('ws-target').textContent = weightProfile.target_weight_kg + ' kg';
+    const toGo = latest.weight_kg - weightProfile.target_weight_kg;
+    document.getElementById('ws-to-go').textContent = toGo > 0 ? `${toGo.toFixed(1)} kg to go` : (toGo < 0 ? `${Math.abs(toGo).toFixed(1)} kg past target` : 'At target');
+  } else {
+    document.getElementById('ws-target').textContent = '\u2013';
+    document.getElementById('ws-to-go').textContent = 'Set a target above';
+  }
+
+  document.getElementById('ws-calories').textContent = Math.round(cal.target) + ' kcal';
+  document.getElementById('ws-cal-note').textContent = cal.floorApplied
+    ? 'Safety floor applied (requested deficit was too aggressive for a safe daily minimum)'
+    : `~${Math.round(cal.dailyDeficit)} kcal/day deficit`;
+
+  document.getElementById('ws-protein').textContent = Math.round(protein.recommended) + ' g';
+  document.getElementById('ws-protein-range').textContent = `Range: ${Math.round(protein.low)}\u2013${Math.round(protein.high)} g`;
+
+  document.getElementById('ws-formula-detail').innerHTML =
+    `BMR (Mifflin-St Jeor): ${Math.round(bmr)} kcal &middot; ` +
+    `TDEE (&times; ${ACTIVITY_LABELS[weightProfile.activity_level]} activity): ${Math.round(cal.tdee)} kcal &middot; ` +
+    `Pace: ${DEFICIT_KG_PER_WEEK[weightProfile.deficit_level]} kg/week target. ` +
+    `These are estimates from standard public formulas, not a substitute for advice from a doctor or dietitian.`;
+}
+
+function renderWeightChart(){
+  const svg = document.getElementById('weight-chart');
+  svg.innerHTML = '';
+  if(weightEntries.length < 1){
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x','50%'); text.setAttribute('y','50%'); text.setAttribute('text-anchor','middle');
+    text.setAttribute('fill','#94A3B8'); text.setAttribute('font-size','13');
+    text.textContent = 'Log at least one weight entry to see the chart.';
+    svg.appendChild(text);
+    return;
+  }
+
+  const width = Math.max(svg.clientWidth || 600, weightEntries.length*60);
+  const height = 220;
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('width', width);
+
+  const padding = { top:20, right:20, bottom:36, left:44 };
+  const plotW = width - padding.left - padding.right;
+  const plotH = height - padding.top - padding.bottom;
+
+  const weights = weightEntries.map(e=>e.weight_kg);
+  const hasHeight = weightProfile && weightProfile.height_cm;
+  const bmis = hasHeight ? weightEntries.map(e=>calcBMI(e.weight_kg, weightProfile.height_cm)) : [];
+  const target = weightProfile && weightProfile.target_weight_kg;
+
+  const allWeightVals = target ? [...weights, target] : weights;
+  const minW = Math.min(...allWeightVals) - 2;
+  const maxW = Math.max(...allWeightVals) + 2;
+
+  const xFor = i => padding.left + (weightEntries.length===1 ? plotW/2 : (i/(weightEntries.length-1))*plotW);
+  const yForWeight = w => padding.top + plotH - ((w-minW)/(maxW-minW))*plotH;
+
+  const ns = 'http://www.w3.org/2000/svg';
+
+  // gridlines
+  for(let g=0; g<=4; g++){
+    const y = padding.top + (g/4)*plotH;
+    const line = document.createElementNS(ns,'line');
+    line.setAttribute('x1', padding.left); line.setAttribute('x2', width-padding.right);
+    line.setAttribute('y1', y); line.setAttribute('y2', y);
+    line.setAttribute('stroke', '#E4DCC8'); line.setAttribute('stroke-width','1');
+    svg.appendChild(line);
+    const label = document.createElementNS(ns,'text');
+    label.setAttribute('x', padding.left-8); label.setAttribute('y', y+4);
+    label.setAttribute('text-anchor','end'); label.setAttribute('font-size','10'); label.setAttribute('fill','#64748B');
+    label.textContent = (maxW - (g/4)*(maxW-minW)).toFixed(0);
+    svg.appendChild(label);
+  }
+
+  // target line
+  if(target){
+    const ty = yForWeight(target);
+    const tLine = document.createElementNS(ns,'line');
+    tLine.setAttribute('x1', padding.left); tLine.setAttribute('x2', width-padding.right);
+    tLine.setAttribute('y1', ty); tLine.setAttribute('y2', ty);
+    tLine.setAttribute('stroke', '#34A374'); tLine.setAttribute('stroke-width','1.5'); tLine.setAttribute('stroke-dasharray','5,4');
+    svg.appendChild(tLine);
+  }
+
+  // weight line + points
+  const weightPoints = weightEntries.map((e,i)=>`${xFor(i)},${yForWeight(e.weight_kg)}`).join(' ');
+  const wPoly = document.createElementNS(ns,'polyline');
+  wPoly.setAttribute('points', weightPoints);
+  wPoly.setAttribute('fill','none'); wPoly.setAttribute('stroke','#5B9BF0'); wPoly.setAttribute('stroke-width','2.5');
+  svg.appendChild(wPoly);
+  weightEntries.forEach((e,i)=>{
+    const c = document.createElementNS(ns,'circle');
+    c.setAttribute('cx', xFor(i)); c.setAttribute('cy', yForWeight(e.weight_kg)); c.setAttribute('r','4');
+    c.setAttribute('fill','#5B9BF0');
+    const title = document.createElementNS(ns,'title');
+    title.textContent = `${e.date}: ${e.weight_kg} kg`;
+    c.appendChild(title);
+    svg.appendChild(c);
+  });
+
+  // BMI line (secondary, scaled to its own min/max independently so it's visible alongside weight)
+  if(hasHeight && bmis.length){
+    const minB = Math.min(...bmis)-1, maxB = Math.max(...bmis)+1;
+    const yForBmi = b => padding.top + plotH - ((b-minB)/(maxB-minB||1))*plotH;
+    const bmiPoints = bmis.map((b,i)=>`${xFor(i)},${yForBmi(b)}`).join(' ');
+    const bPoly = document.createElementNS(ns,'polyline');
+    bPoly.setAttribute('points', bmiPoints);
+    bPoly.setAttribute('fill','none'); bPoly.setAttribute('stroke','#E86FAE'); bPoly.setAttribute('stroke-width','2');
+    bPoly.setAttribute('stroke-dasharray','3,3');
+    svg.appendChild(bPoly);
+  }
+
+  // x-axis date labels
+  weightEntries.forEach((e,i)=>{
+    if(weightEntries.length > 8 && i % Math.ceil(weightEntries.length/8) !== 0) return;
+    const label = document.createElementNS(ns,'text');
+    const d = new Date(e.date+'T00:00:00');
+    label.setAttribute('x', xFor(i)); label.setAttribute('y', height-14);
+    label.setAttribute('text-anchor','middle'); label.setAttribute('font-size','9'); label.setAttribute('fill','#64748B');
+    label.textContent = d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    svg.appendChild(label);
+  });
+}
 
 /* ---------------- Smart line-splitting for pasted topics ----------------
    Handles the common case where pasted text (e.g. copied from a PDF or

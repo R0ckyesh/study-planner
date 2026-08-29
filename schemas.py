@@ -115,3 +115,38 @@ class RoutineReorder(BaseModel):
 
 class RoutineSkipCreate(BaseModel):
     date: Date
+
+
+class WeightEntryCreate(BaseModel):
+    date: Date
+    weight_kg: float
+
+
+class WeightEntryOut(BaseModel):
+    id: int
+    date: Date
+    weight_kg: float
+
+    class Config:
+        from_attributes = True
+
+
+class WeightProfileUpdate(BaseModel):
+    height_cm: Optional[float] = None
+    age: Optional[int] = None
+    sex: Optional[str] = None
+    activity_level: Optional[str] = None
+    target_weight_kg: Optional[float] = None
+    deficit_level: Optional[str] = None
+
+
+class WeightProfileOut(BaseModel):
+    height_cm: Optional[float] = None
+    age: Optional[int] = None
+    sex: str
+    activity_level: str
+    target_weight_kg: Optional[float] = None
+    deficit_level: str
+
+    class Config:
+        from_attributes = True

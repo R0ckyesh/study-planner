@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, Integer, String, Date, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, Boolean, DateTime, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -79,3 +79,28 @@ class RoutineSkip(Base):
     routine_item_id = Column(Integer, ForeignKey("routine_items.id"))
     date = Column(Date, nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class WeightEntry(Base):
+    """A single logged bodyweight reading on a given date."""
+    __tablename__ = "weight_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, nullable=False, index=True)
+    weight_kg = Column(Float, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class WeightProfile(Base):
+    """Single-row profile (personal-use app, one user) holding the inputs
+    needed for BMI/BMR/calorie/protein calculations. Row id is always 1."""
+    __tablename__ = "weight_profile"
+
+    id = Column(Integer, primary_key=True, default=1)
+    height_cm = Column(Float, nullable=True)
+    age = Column(Integer, nullable=True)
+    sex = Column(String, default="male")  # "male" | "female" — affects BMR formula
+    activity_level = Column(String, default="sedentary")  # sedentary|light|moderate|very_active
+    target_weight_kg = Column(Float, nullable=True)
+    deficit_level = Column(String, default="standard")  # gentle|standard|faster
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
