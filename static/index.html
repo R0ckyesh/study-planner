@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Study Planner</title>
+<title>Dayframe — Study OS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -25,9 +25,34 @@
   html,body{margin:0;padding:0;}
   body{
     font-family:'Inter',system-ui,-apple-system,sans-serif;
-    background: radial-gradient(circle at 1px 1px, var(--paper-line) 1px, transparent 0) 0 0/22px 22px, var(--paper);
+    background:
+      radial-gradient(circle at 12% 8%, rgba(147,197,253,0.22) 0%, transparent 40%),
+      radial-gradient(circle at 88% 15%, rgba(249,168,212,0.18) 0%, transparent 38%),
+      radial-gradient(circle at 20% 85%, rgba(253,230,138,0.16) 0%, transparent 35%),
+      radial-gradient(circle at 92% 80%, rgba(196,181,253,0.20) 0%, transparent 38%),
+      radial-gradient(circle at 1px 1px, var(--paper-line) 1px, transparent 0) 0 0/22px 22px,
+      var(--paper);
+    background-attachment: fixed, fixed, fixed, fixed, scroll, scroll;
     color:var(--ink); min-height:100vh; padding-bottom:60px;
   }
+  .sparkle-decor{ position:fixed; pointer-events:none; z-index:0; font-size:1.1rem; opacity:0.35; animation:sparkle-float 6s ease-in-out infinite; }
+  @keyframes sparkle-float{ 0%,100%{ transform:translateY(0) rotate(0deg); } 50%{ transform:translateY(-10px) rotate(15deg); } }
+  main, .topbar{ position:relative; z-index:1; }
+
+  .mascot-empty{ text-align:center; padding:24px 16px; }
+  .mascot-empty-icon{ display:inline-block; filter:drop-shadow(0 4px 8px rgba(22,50,79,0.12)); }
+  .mascot-bubble{
+    position:relative; display:inline-block; background:#fff; border:1.5px solid var(--paper-line);
+    border-radius:16px; padding:10px 18px; margin-top:10px; font-size:0.88rem; color:var(--ink-soft);
+    max-width:280px; box-shadow:0 3px 8px rgba(22,50,79,0.06);
+  }
+  .mascot-bubble::before{
+    content:''; position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+    border-left:8px solid transparent; border-right:8px solid transparent; border-bottom:8px solid #fff;
+  }
+  .mascot-greeting{ display:flex; align-items:center; gap:14px; }
+  .mascot-greeting-icon{ flex-shrink:0; filter:drop-shadow(0 3px 6px rgba(22,50,79,0.15)); }
+
   .topbar{ background:linear-gradient(120deg,var(--navy),var(--navy-2)); padding:26px 18px 0; color:#fff; }
   .brand{ display:flex; align-items:baseline; gap:10px; max-width:1000px; margin:0 auto; padding:0 4px 18px; }
   .brand h1{ font-family:'Fraunces',serif; font-weight:600; font-size:1.6rem; margin:0; }
@@ -226,15 +251,223 @@
     .selbar{ padding:16px 22px; font-size:0.95rem; }
     .selbar span{ font-size:0.95rem; }
   }
+
+/* ================================================================
+   DAYFRAME UI — product-level visual redesign
+   Keeps existing IDs/classes/JS contracts intact.
+   ================================================================ */
+:root{
+  --ink:#17202A;
+  --ink-soft:#66717D;
+  --paper:#F4F1E9;
+  --paper-line:#DED9CE;
+  --card:#FFFDF8;
+  --navy:#182329;
+  --navy-2:#243238;
+  --teal:#A6E36D;
+  --teal-soft:#EEF8E4;
+  --blue-deep:#7AA8FF;
+  --blue-soft:#EEF4FF;
+  --purple-deep:#9B8AFB;
+  --purple-soft:#F1EEFF;
+  --pink-deep:#F07E9F;
+  --pink-soft:#FFF0F4;
+  --green:#A6E36D;
+  --green-soft:#EEF8E4;
+  --yellow:#F3D46B;
+  --orange:#F2A36F;
+  --shadow:0 18px 50px rgba(23,32,42,.08), 0 3px 12px rgba(23,32,42,.05);
+  --radius:20px;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(900px 500px at 75% -10%, rgba(166,227,109,.20), transparent 65%),
+    radial-gradient(700px 500px at 5% 55%, rgba(122,168,255,.12), transparent 65%),
+    linear-gradient(135deg,#F7F4ED 0%,#EFECE4 100%);
+  color:var(--ink);
+  letter-spacing:-.01em;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.18;
+  background-image:linear-gradient(rgba(23,32,42,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(23,32,42,.025) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+.sparkle-decor{display:none}
+
+.topbar{
+  position:fixed!important;left:18px;top:18px;bottom:18px;width:248px;
+  border-radius:28px;padding:24px 14px 14px!important;
+  background:linear-gradient(160deg,#182329 0%,#202F36 65%,#26383F 100%)!important;
+  box-shadow:0 24px 60px rgba(23,32,42,.20), inset 0 1px 0 rgba(255,255,255,.08);
+  display:flex;flex-direction:column;z-index:20;
+  overflow:hidden;
+}
+.topbar::after{
+  content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-90px;bottom:-60px;
+  background:rgba(166,227,109,.12);filter:blur(3px);pointer-events:none;
+}
+.brand{
+  width:auto!important;max-width:none!important;margin:0!important;padding:4px 10px 22px!important;
+  display:block!important;position:relative;z-index:1;
+}
+.brand > div:first-child{gap:11px!important;align-items:flex-start!important}
+#header-mascot{width:42px;height:42px;display:flex!important;align-items:center;justify-content:center;background:rgba(166,227,109,.12);border:1px solid rgba(166,227,109,.22);border-radius:14px}
+#header-mascot svg{width:32px!important;height:32px!important}
+.brand h1{font-family:'Fraunces',serif;font-size:1.55rem!important;line-height:1;margin:2px 0 7px!important;color:#fff;letter-spacing:-.035em}
+.brand span{font-family:'IBM Plex Mono',monospace!important;font-size:.58rem!important;color:#AEBCC1!important;letter-spacing:.08em;text-transform:uppercase}
+.brand > div:first-child > div{min-width:0}
+.brand > a{position:absolute;right:10px;top:9px;font-size:0!important;width:8px;height:8px;border-radius:50%;background:#A6E36D;box-shadow:0 0 0 5px rgba(166,227,109,.10);overflow:hidden}
+
+.tabs{display:flex!important;flex-direction:column;gap:5px!important;width:100%!important;margin:0!important;padding:0 2px!important;position:relative;z-index:1}
+.tabs::before{content:"WORKSPACE";font:600 .58rem 'IBM Plex Mono',monospace;color:#718188;letter-spacing:.16em;padding:4px 12px 8px}
+.tab{
+  width:100%;text-align:left;font-family:'Inter',sans-serif!important;font-size:.78rem!important;font-weight:600!important;
+  color:#AAB8BD!important;background:transparent!important;border:1px solid transparent!important;border-radius:13px!important;
+  padding:11px 12px!important;transform:none!important;box-shadow:none!important;display:flex;align-items:center;gap:9px;
+}
+.tab:hover{background:rgba(255,255,255,.055)!important;color:#fff!important}
+.tab.active{background:#F7F4EC!important;color:#182329!important;box-shadow:0 8px 22px rgba(0,0,0,.16)!important}
+.tab.active::after{content:"";margin-left:auto;width:6px;height:6px;border-radius:50%;background:#A6E36D}
+
+main{max-width:none!important;margin:0!important;padding:28px 34px 70px 294px!important;position:relative;z-index:1}
+section.view{max-width:1380px;margin:0 auto}
+section.view.active{animation:dayframe-in .28s ease both}
+@keyframes dayframe-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+
+.card,.subject-card{
+  background:rgba(255,253,248,.92)!important;border:1px solid rgba(222,217,206,.9)!important;
+  border-radius:var(--radius)!important;box-shadow:var(--shadow)!important;backdrop-filter:blur(12px);
+}
+.card{padding:24px!important;margin-bottom:18px!important}
+.card h2{font-family:'Fraunces',serif!important;font-size:1.18rem!important;letter-spacing:-.025em;color:#182329!important}
+.card .sub{color:#727B82!important}
+
+/* Give Today a bento-dashboard rhythm */
+#view-today{display:none}
+#view-today.active{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.8fr);gap:18px;align-items:start}
+#view-today .card{margin:0!important}
+#today-greeting-card{grid-column:1/-1;min-height:190px;padding:30px!important;display:flex;align-items:center;overflow:hidden;position:relative;background:linear-gradient(135deg,#FFFDF8 0%,#F5F8EE 100%)!important}
+#today-greeting-card::before{content:"TODAY / COMMAND CENTER";position:absolute;right:28px;top:24px;font:600 .58rem 'IBM Plex Mono',monospace;letter-spacing:.16em;color:#98A29B}
+#today-greeting-card::after{content:"";position:absolute;width:250px;height:250px;border-radius:50%;right:-70px;bottom:-130px;background:#E7F5D7}
+#today-greeting{font-size:clamp(1.8rem,3vw,2.7rem)!important;line-height:1!important;margin-bottom:8px!important}
+#today-date{font-family:'IBM Plex Mono',monospace;font-size:.72rem!important;letter-spacing:.06em;text-transform:uppercase}
+#today-streak{background:#182329;color:#fff!important;border-radius:999px;padding:9px 13px;display:inline-block}
+#today-greeting-card .mascot-greeting{position:relative;z-index:2}
+#today-greeting-card .mascot-greeting-icon{width:92px;height:92px;display:flex;align-items:center;justify-content:center;background:#E9F5DD;border-radius:26px}
+#today-greeting-card .mascot-greeting-icon svg{width:82px!important;height:82px!important}
+#view-today .card:nth-of-type(2){grid-column:1}
+#view-today .card:nth-of-type(3){grid-column:2;grid-row:2}
+#view-today .card:nth-of-type(4){grid-column:1;grid-row:3}
+#view-today .card:nth-of-type(5){grid-column:2;grid-row:3}
+#view-today .card:nth-of-type(6){grid-column:1/-1;grid-row:4}
+
+.bar-track{height:12px!important;background:#E7E4DB!important;border-radius:99px!important}
+.bar-fill{background:linear-gradient(90deg,#A6E36D,#7CCB65)!important;border-radius:99px}
+.overall-label{color:#182329!important;font-family:'IBM Plex Mono',monospace!important}
+
+button.pill{border-radius:12px!important;padding:10px 14px!important;font-size:.75rem!important;letter-spacing:.01em}
+.pill-teal{background:#182329!important;color:#F8FFF1!important;box-shadow:0 5px 14px rgba(24,35,41,.12)}
+.pill-teal:hover{background:#2B3C43!important;transform:translateY(-1px)}
+.pill-ghost{background:#EEF5E6!important;color:#31402D!important}
+.pill-rose{background:#FFF0F4!important;color:#C95577!important}
+.pill-nav{background:#182329!important;color:#fff!important}
+
+/* Planner: turn the dense grid into a premium scheduling surface */
+#view-planner .card{padding:16px!important;overflow:hidden}
+#view-planner .week-nav{padding:8px 8px 14px;border-bottom:1px solid #E8E4DA}
+.week-range{font-size:.86rem!important;letter-spacing:.06em;text-transform:uppercase}
+.planner-scroll{border:1px solid #DCD8CE!important;border-radius:16px!important;background:#FAF9F4;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+.planner-grid{grid-template-columns:82px repeat(7,minmax(128px,1fr))!important}
+.daycolhead,.corner{background:#182329!important}
+.daycolhead{font-size:.72rem!important;letter-spacing:.06em;text-transform:uppercase}
+.daycolhead.is-today{background:#A6E36D!important;color:#182329!important}
+.daycolhead.is-today .dnum{color:#31402D!important}
+.hourlabel{background:#202E34!important;color:#B7C1C4!important}
+.hourcell{height:50px!important;background:#FFFDF8!important}
+.hourcell:hover{background:#F0F8E9!important}
+.hourcell.is-today-col{background:#F7FAF2!important}
+.hourcell.selected{background:#E5F5D2!important;box-shadow:inset 0 0 0 2px #A6E36D!important}
+.block{border-radius:10px!important;border-left:3px solid rgba(255,255,255,.75)!important;box-shadow:0 5px 14px rgba(23,32,42,.16)!important}
+.block:hover{transform:translateY(-2px)!important}
+.now-line{background:#F07E9F!important}
+.now-line::before{background:#F07E9F!important}
+.now-line .now-label{background:#F07E9F!important}
+.selbar{background:#182329!important;border-radius:15px!important;box-shadow:0 15px 35px rgba(24,35,41,.22)!important}
+
+/* Syllabus / goals / lists */
+.subject-grid{gap:18px!important}
+.subject-card{overflow:hidden}
+.subject-head{padding:18px!important}
+.subject-head h3{font-size:1.1rem!important}
+.subject-body{padding:15px 17px 18px!important}
+ul.topic-list li{padding:10px 4px!important}
+ul.topic-list li:hover{background:#FAF8F1;border-radius:9px}
+.add-subject-card{border:1.5px dashed #C8C3B8!important;background:rgba(255,253,248,.55)!important;min-height:170px!important;border-radius:20px!important}
+.add-subject-card:hover{border-color:#A6E36D!important;background:#F4F9EC!important}
+
+/* Form controls */
+input,select,textarea{background:#FBFAF6!important;border-color:#D9D5CA!important;border-radius:11px!important;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#A6E36D!important;box-shadow:0 0 0 4px rgba(166,227,109,.16)!important}
+
+/* Month */
+.month-grid{gap:6px!important}
+.month-day{min-height:90px!important;border-color:#E1DDD3!important;border-radius:12px!important;background:#FFFDF8!important}
+.month-day:hover{background:#F2F8EB!important}
+.month-day.today{border-color:#A6E36D!important}
+.month-day.selected{background:#E7F5D7!important;border-color:#A6E36D!important}
+
+/* Modals */
+.overlay{background:rgba(14,21,25,.62)!important;backdrop-filter:blur(8px)}
+.modal{background:#FFFDF8!important;border:1px solid #E0DBD0;box-shadow:0 25px 80px rgba(0,0,0,.25)!important;border-radius:22px!important;padding:24px!important}
+.modal h3{font-size:1.35rem!important}
+
+footer{color:#8D948F!important;font-family:'IBM Plex Mono',monospace}
+
+@media (max-width:899px){
+  .topbar{position:relative!important;left:auto;top:auto;bottom:auto;width:auto;margin:12px;border-radius:22px;padding:16px!important;display:block!important}
+  .brand{padding:4px 6px 15px!important}
+  .brand > a{top:8px;right:8px}
+  .tabs{display:grid!important;grid-template-columns:repeat(3,1fr);gap:5px!important}
+  .tabs::before{grid-column:1/-1}
+  .tab{font-size:.68rem!important;padding:10px 8px!important;text-align:center;justify-content:center}
+  main{padding:10px 12px 50px!important}
+  #view-today.active{display:block}
+  #view-today .card{margin-bottom:14px!important}
+  #today-greeting-card{min-height:155px}
+}
+@media (min-width:900px) and (max-width:1150px){
+  .topbar{width:220px}
+  main{padding-left:266px!important}
+  #view-today.active{grid-template-columns:1fr 1fr}
+}
+@media (max-width:600px){
+  .tabs{grid-template-columns:repeat(2,1fr)}
+  .card{padding:18px!important}
+  #today-greeting-card{padding:22px!important}
+  #today-greeting-card::before{display:none}
+  #today-streak{font-size:.7rem!important}
+}
+
 </style>
 </head>
 <body>
 
+<span class="sparkle-decor" style="top:8%; left:5%; animation-delay:0s;">&#10024;</span>
+<span class="sparkle-decor" style="top:15%; right:8%; animation-delay:1.5s;">&#10024;</span>
+<span class="sparkle-decor" style="top:45%; left:3%; animation-delay:3s;">&#127775;</span>
+<span class="sparkle-decor" style="top:65%; right:4%; animation-delay:2s;">&#10024;</span>
+<span class="sparkle-decor" style="top:85%; left:8%; animation-delay:4s;">&#127775;</span>
+
 <div class="topbar">
-  <div class="brand" style="justify-content:space-between; display:flex; align-items:baseline;">
-    <div>
-      <h1 style="display:inline;">Study Planner</h1>
-      <span style="margin-left:10px;">live calendar &middot; syllabus tracker &middot; history</span>
+  <div class="brand" style="justify-content:space-between; display:flex; align-items:center;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span id="header-mascot" style="display:inline-flex; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></span>
+      <div>
+        <h1 style="display:inline;">Dayframe</h1>
+        <span style="margin-left:10px;">STUDY OS &middot; PLAN / FOCUS / FINISH</span>
+      </div>
     </div>
     <a href="/logout" style="color:#B9CBDD; font-size:0.8rem; text-decoration:none; font-family:'Inter',sans-serif;">Log out</a>
   </div>
@@ -245,16 +478,22 @@
     <button class="tab" id="tab-wishlist" onclick="showTab('wishlist')">&#10024; Wish List</button>
     <button class="tab" id="tab-history" onclick="showTab('history')">&#128202; History</button>
     <button class="tab" id="tab-weight" onclick="showTab('weight')">&#9878;&#65039; Weight</button>
+    <button class="tab" id="tab-focus" onclick="showTab('focus')">&#9201;&#65039; Focus</button>
+    <button class="tab" id="tab-goals" onclick="showTab('goals')">&#127919; Goals</button>
+    <button class="tab" id="tab-analytics" onclick="showTab('analytics')">&#128200; Analytics</button>
   </div>
 </div>
 
 <main>
   <section class="view active" id="view-today">
     <div class="card" id="today-greeting-card">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
-        <div>
-          <h2 id="today-greeting" style="font-size:1.3rem; margin-bottom:2px;">Hello</h2>
-          <p class="sub" id="today-date" style="margin:0;">&nbsp;</p>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div class="mascot-greeting">
+          <span class="mascot-greeting-icon" id="today-mascot"></span>
+          <div>
+            <h2 id="today-greeting" style="font-size:1.3rem; margin-bottom:2px;">Hello</h2>
+            <p class="sub" id="today-date" style="margin:0;">&nbsp;</p>
+          </div>
         </div>
         <div style="text-align:right;">
           <div class="overall-label" id="today-streak" style="font-size:0.95rem;">&#128293; 0-day streak</div>
@@ -502,6 +741,96 @@
       <ul class="topic-list" id="weight-entry-list" style="max-height:none; border-top:1px dashed var(--paper-line); margin-top:14px;"></ul>
     </div>
   </section>
+
+  <section class="view" id="view-focus">
+    <div class="card" id="focus-idle-card">
+      <h2>&#9201;&#65039; Focus Session</h2>
+      <p class="sub">Start a timed study session. What you actually study gets logged automatically, even if you finish early or run over.</p>
+      <div class="field-row">
+        <div>
+          <label>Subject (optional)</label>
+          <select id="focus-subject-select"><option value="">None / custom label</option></select>
+        </div>
+        <div>
+          <label>Or custom label</label>
+          <input type="text" id="focus-label-input" placeholder="e.g. Reading, Project work">
+        </div>
+      </div>
+      <label style="display:block; font-size:0.72rem; color:var(--ink-soft); margin-bottom:4px; font-family:'IBM Plex Mono',monospace;">Duration</label>
+      <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+        <button class="pill pill-ghost focus-preset" data-mins="25">25 min</button>
+        <button class="pill pill-ghost focus-preset" data-mins="50">50 min</button>
+        <input type="number" id="focus-custom-mins" placeholder="Custom (min)" style="width:130px; border:1.4px solid var(--paper-line); border-radius:999px; padding:9px 14px; font-family:inherit; font-size:0.85rem;">
+      </div>
+      <button class="pill pill-teal" onclick="startFocusSession()">&#9654; Start Session</button>
+    </div>
+
+    <div class="card" id="focus-active-card" style="display:none;">
+      <h2 id="focus-active-title">Studying</h2>
+      <div style="text-align:center; padding:20px 0;">
+        <div id="focus-timer-display" style="font-family:'Fraunces',serif; font-size:3rem; font-weight:700; color:var(--navy);">25:00</div>
+        <div id="focus-timer-sub" class="sub" style="margin-top:4px;">Planned: 25 min</div>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+        <button class="pill pill-ghost" id="focus-pause-btn" onclick="togglePauseFocus()">&#9208; Pause</button>
+        <button class="pill pill-teal" onclick="finishFocusSession('completed')">&#10003; Finish</button>
+        <button class="pill pill-rose" onclick="finishFocusSession('abandoned')">Abandon</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Recent Sessions</h2>
+      <ul class="history-list" id="focus-session-list"></ul>
+    </div>
+  </section>
+
+  <section class="view" id="view-goals">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+        <div>
+          <h2 style="margin-bottom:4px;">&#127919; Goals</h2>
+          <p class="sub" style="margin:0;">Progress on Study Hours, Tasks Completed, and Subject Complete goals updates automatically from your real data.</p>
+        </div>
+        <button class="pill pill-teal" onclick="openGoalModal()">+ Add Goal</button>
+      </div>
+    </div>
+    <div class="subject-grid" id="goals-grid"></div>
+  </section>
+
+  <section class="view" id="view-analytics">
+    <div class="card">
+      <h2>&#128200; Study Analytics</h2>
+      <p class="sub">Based on your last 30 days of completed Focus sessions and completed tasks/topics.</p>
+      <div class="subject-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px;">
+        <div class="weight-stat"><div class="weight-stat-label">Total Study Time</div><div class="weight-stat-value" id="an-total-time">&ndash;</div></div>
+        <div class="weight-stat"><div class="weight-stat-label">This Week</div><div class="weight-stat-value" id="an-week-time">&ndash;</div></div>
+        <div class="weight-stat"><div class="weight-stat-label">Tasks Completed</div><div class="weight-stat-value" id="an-tasks">&ndash;</div></div>
+        <div class="weight-stat"><div class="weight-stat-label">Topics Completed</div><div class="weight-stat-value" id="an-topics">&ndash;</div></div>
+        <div class="weight-stat"><div class="weight-stat-label">Current Streak</div><div class="weight-stat-value" id="an-streak">&ndash;</div></div>
+        <div class="weight-stat"><div class="weight-stat-label">Longest Streak</div><div class="weight-stat-value" id="an-longest">&ndash;</div></div>
+      </div>
+      <p class="sub" style="margin-top:14px;" id="an-highlights"></p>
+    </div>
+
+    <div class="card">
+      <h2>Study Time by Day</h2>
+      <div style="width:100%; overflow-x:auto;"><svg id="an-chart-day" width="100%" height="180" style="min-width:320px;"></svg></div>
+    </div>
+
+    <div class="card">
+      <h2>Study Time by Subject</h2>
+      <div style="width:100%; overflow-x:auto;"><svg id="an-chart-subject" width="100%" height="180" style="min-width:320px;"></svg></div>
+    </div>
+
+    <div class="card">
+      <h2>Planned vs. Actual</h2>
+      <div class="legend-row" style="margin-bottom:8px;">
+        <span class="swatch-chip"><span class="swatch-dot" style="background:#C4B5FD;"></span>Planned</span>
+        <span class="swatch-chip"><span class="swatch-dot" style="background:#5B9BF0;"></span>Actual</span>
+      </div>
+      <div style="width:100%; overflow-x:auto;"><svg id="an-chart-planned" width="100%" height="180" style="min-width:320px;"></svg></div>
+    </div>
+  </section>
 </main>
 
 <footer>Data is stored in PostgreSQL via the FastAPI backend &mdash; it persists across sessions and devices.</footer>
@@ -662,11 +991,137 @@ Run a half marathon"></textarea>
   </div>
 </div>
 
+<div class="overlay" id="goal-overlay">
+  <div class="modal">
+    <h3 id="goal-modal-title">Add Goal</h3>
+    <input type="text" id="goal-title-input" placeholder="e.g. Finish SQL, Study 60 hours this month">
+    <textarea id="goal-desc-input" placeholder="Description (optional)" style="width:100%; min-height:60px; border:1.4px solid var(--paper-line); border-radius:8px; padding:10px 12px; font-family:inherit; font-size:0.88rem; resize:vertical; margin-bottom:12px;"></textarea>
+
+    <label style="display:block; font-size:0.72rem; color:var(--ink-soft); margin-bottom:4px; font-family:'IBM Plex Mono',monospace;">Goal type</label>
+    <select id="goal-type-input" style="width:100%; border:1.4px solid var(--paper-line); border-radius:8px; padding:9px 10px; font-family:inherit; font-size:0.88rem; margin-bottom:12px;">
+      <option value="study_hours">Study hours (auto-tracked from Focus sessions)</option>
+      <option value="tasks_completed">Tasks completed (auto-tracked)</option>
+      <option value="subject_complete">Finish a subject's topics (auto-tracked)</option>
+      <option value="custom">Custom (you update progress manually)</option>
+    </select>
+
+    <div id="goal-subject-row" style="display:none; margin-bottom:12px;">
+      <label style="display:block; font-size:0.72rem; color:var(--ink-soft); margin-bottom:4px; font-family:'IBM Plex Mono',monospace;">Subject</label>
+      <select id="goal-subject-input" style="width:100%; border:1.4px solid var(--paper-line); border-radius:8px; padding:9px 10px; font-family:inherit; font-size:0.88rem;"></select>
+    </div>
+
+    <div class="field-row">
+      <div>
+        <label id="goal-target-label">Target</label>
+        <input type="number" id="goal-target-input" placeholder="e.g. 60">
+      </div>
+      <div>
+        <label>Deadline (optional)</label>
+        <input type="date" id="goal-deadline-input">
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label>Period</label>
+        <select id="goal-period-input">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="long_term">Long-term</option>
+          <option value="custom" selected>Custom</option>
+        </select>
+      </div>
+      <div>
+        <label>Priority</label>
+        <select id="goal-priority-input">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="pill pill-rose" id="goal-delete-btn" style="display:none;" onclick="deleteGoal()">Delete</button>
+      <button class="pill pill-ghost" onclick="closeGoalModal()">Cancel</button>
+      <button class="pill pill-teal" onclick="saveGoal()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = ''; // same origin as the backend
 const DAY_ABBR = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
 const START_HOUR = 5, END_HOUR = 23, NUM_SLOTS = END_HOUR - START_HOUR + 1;
 const PALETTE = ["#5B9BF0","#8B7AE8","#E86FAE","#E0B33D","#34A374","#EF9B4E"];
+
+/* ============================================================
+   Mascot — an original owl character (no existing franchise/IP).
+   Returns inline SVG markup for a given mood, reusable anywhere in the app.
+   ============================================================ */
+function mascotSVG(mood, size){
+  size = size || 80;
+  const moods = {
+    idle: `<ellipse cx="60" cy="66" rx="34" ry="32" fill="#5B9BF0"/>
+      <path d="M28 40 Q34 18 46 28 Q40 34 40 44 Z" fill="#5B9BF0"/>
+      <path d="M92 40 Q86 18 74 28 Q80 34 80 44 Z" fill="#5B9BF0"/>
+      <ellipse cx="60" cy="68" rx="24" ry="23" fill="#EAF3FE"/>
+      <circle cx="49" cy="62" r="9" fill="#fff"/><circle cx="71" cy="62" r="9" fill="#fff"/>
+      <circle cx="49" cy="62" r="4.5" fill="#16324F"/><circle cx="71" cy="62" r="4.5" fill="#16324F"/>
+      <path d="M56 72 L60 77 L64 72 Z" fill="#E0B33D"/>
+      <path d="M40 92 Q60 100 80 92 Q60 108 40 92 Z" fill="#8B7AE8"/>
+      <circle cx="60" cy="20" r="8" fill="none" stroke="#E86FAE" stroke-width="2.5"/>
+      <path d="M60 12 L60 6 M56 8 L60 12 L64 8" fill="none" stroke="#E86FAE" stroke-width="2" stroke-linecap="round"/>`,
+    happy: `<ellipse cx="60" cy="66" rx="34" ry="32" fill="#34A374"/>
+      <path d="M28 40 Q34 18 46 28 Q40 34 40 44 Z" fill="#34A374"/>
+      <path d="M92 40 Q86 18 74 28 Q80 34 80 44 Z" fill="#34A374"/>
+      <ellipse cx="60" cy="68" rx="24" ry="23" fill="#E8FBEF"/>
+      <path d="M42 60 Q49 54 56 60" fill="none" stroke="#16324F" stroke-width="3" stroke-linecap="round"/>
+      <path d="M64 60 Q71 54 78 60" fill="none" stroke="#16324F" stroke-width="3" stroke-linecap="round"/>
+      <path d="M52 74 Q60 82 68 74" fill="none" stroke="#E0B33D" stroke-width="3" stroke-linecap="round"/>
+      <path d="M40 92 Q60 100 80 92 Q60 108 40 92 Z" fill="#8B7AE8"/>
+      <path d="M20 55 L14 50 M20 60 L12 60 M100 55 L106 50 M100 60 L108 60" stroke="#FDBA74" stroke-width="2.5" stroke-linecap="round"/>`,
+    sleepy: `<ellipse cx="60" cy="70" rx="34" ry="32" fill="#8B7AE8"/>
+      <path d="M28 44 Q34 22 46 32 Q40 38 40 48 Z" fill="#8B7AE8"/>
+      <path d="M92 44 Q86 22 74 32 Q80 38 80 48 Z" fill="#8B7AE8"/>
+      <ellipse cx="60" cy="72" rx="24" ry="23" fill="#F3F0FE"/>
+      <path d="M42 68 Q49 72 56 68" fill="none" stroke="#16324F" stroke-width="3" stroke-linecap="round"/>
+      <path d="M64 68 Q71 72 78 68" fill="none" stroke="#16324F" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="60" cy="80" rx="4" ry="3" fill="#E0B33D"/>
+      <path d="M40 96 Q60 104 80 96 Q60 112 40 96 Z" fill="#5B9BF0"/>
+      <text x="86" y="30" font-size="16" fill="#94A3B8" font-family="Georgia,serif">z</text>
+      <text x="96" y="20" font-size="12" fill="#94A3B8" font-family="Georgia,serif">z</text>`,
+    studying: `<ellipse cx="60" cy="70" rx="32" ry="30" fill="#5B9BF0"/>
+      <path d="M30 46 Q36 26 47 35 Q41 41 41 50 Z" fill="#5B9BF0"/>
+      <path d="M90 46 Q84 26 73 35 Q79 41 79 50 Z" fill="#5B9BF0"/>
+      <ellipse cx="60" cy="72" rx="22" ry="21" fill="#EAF3FE"/>
+      <circle cx="50" cy="67" r="7" fill="#fff"/><circle cx="70" cy="67" r="7" fill="#fff"/>
+      <circle cx="50" cy="67" r="3.5" fill="#16324F"/><circle cx="70" cy="67" r="3.5" fill="#16324F"/>
+      <rect x="38" y="94" width="44" height="6" rx="1.5" fill="#16324F"/>
+      <rect x="40" y="88" width="40" height="8" rx="1.5" fill="#F9A8D4"/>
+      <line x1="60" y1="88" x2="60" y2="96" stroke="#fff" stroke-width="1.5"/>`,
+    celebrating: `<ellipse cx="60" cy="66" rx="34" ry="32" fill="#EF9B4E"/>
+      <path d="M28 40 Q34 18 46 28 Q40 34 40 44 Z" fill="#EF9B4E"/>
+      <path d="M92 40 Q86 18 74 28 Q80 34 80 44 Z" fill="#EF9B4E"/>
+      <ellipse cx="60" cy="68" rx="24" ry="23" fill="#FFF1E3"/>
+      <path d="M42 58 Q49 52 56 58" fill="none" stroke="#16324F" stroke-width="3" stroke-linecap="round"/>
+      <path d="M64 58 Q71 52 78 58" fill="none" stroke="#16324F" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="60" cy="76" rx="9" ry="7" fill="#16324F"/>
+      <path d="M40 92 Q60 100 80 92 Q60 108 40 92 Z" fill="#E86FAE"/>
+      <circle cx="15" cy="30" r="3" fill="#F9A8D4"/><circle cx="105" cy="35" r="4" fill="#93C5FD"/>
+      <circle cx="20" cy="90" r="3.5" fill="#FDE68A"/><circle cx="102" cy="88" r="3" fill="#86EFAC"/>`,
+  };
+  return `<svg viewBox="0 0 120 120" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">${moods[mood] || moods.idle}</svg>`;
+}
+
+/* Renders a mascot + message as a speech-bubble style empty state, used
+   across tabs instead of a plain text-only "nothing here yet" message. */
+function mascotEmptyState(mood, message, actionHtml){
+  return `<div class="mascot-empty">
+    <div class="mascot-empty-icon">${mascotSVG(mood, 72)}</div>
+    <div class="mascot-bubble">${message}</div>
+    ${actionHtml || ''}
+  </div>`;
+}
 
 let weekStart = startOfWeek(new Date());
 let monthCursor = startOfMonth(new Date());
@@ -710,7 +1165,7 @@ function fmtRange(start){
 }
 
 function showTab(name){
-  ['today','planner','syllabus','wishlist','history','weight'].forEach(n=>{
+  ['today','planner','syllabus','wishlist','history','weight','focus','goals','analytics'].forEach(n=>{
     document.getElementById('view-'+n).classList.toggle('active', n===name);
     document.getElementById('tab-'+n).classList.toggle('active', n===name);
   });
@@ -718,6 +1173,9 @@ function showTab(name){
   if(name==='wishlist') loadWishes();
   if(name==='today') loadToday();
   if(name==='weight') loadWeightTab();
+  if(name==='focus') loadFocusTab();
+  if(name==='goals') loadGoalsTab();
+  if(name==='analytics') loadAnalyticsTab();
 }
 
 /* ---------------- Weekly planner ---------------- */
@@ -1432,9 +1890,8 @@ function renderSubjects(){
 
   if(subjects.length === 0){
     const empty = document.createElement('div');
-    empty.className = 'add-subject-card';
     empty.style.gridColumn = '1 / -1';
-    empty.innerHTML = 'No subjects yet &mdash; use <strong>&nbsp;Bulk Import Syllabus&nbsp;</strong> or <strong>&nbsp;+ Add Subject&nbsp;</strong> above to get started.';
+    empty.innerHTML = mascotEmptyState('sleepy', 'No subjects yet &mdash; use <strong>Bulk Import Syllabus</strong> or <strong>+ Add Subject</strong> above to get started.');
     grid.appendChild(empty);
   }
 
@@ -1476,8 +1933,7 @@ function renderRoutine(){
   list.innerHTML = '';
   if(routineItems.length === 0){
     const empty = document.createElement('div');
-    empty.className = 'topic-empty';
-    empty.textContent = 'No routine items yet \u2014 add one below. It repeats every day until you delete it.';
+    empty.innerHTML = mascotEmptyState('sleepy', 'No routine items yet &mdash; add one below. It repeats every day until you delete it.');
     list.appendChild(empty);
     return;
   }
@@ -1645,8 +2101,7 @@ function renderWishes(){
   list.innerHTML = '';
   if(wishes.length === 0){
     const empty = document.createElement('div');
-    empty.className = 'topic-empty';
-    empty.textContent = 'Nothing here yet \u2014 add a wish above.';
+    empty.innerHTML = mascotEmptyState('sleepy', 'Nothing here yet &mdash; add a wish above.');
     list.appendChild(empty);
     return;
   }
@@ -1774,6 +2229,457 @@ function renderHistory(){
 }
 
 function escapeHtml(str){ const div=document.createElement('div'); div.textContent=str; return div.innerHTML; }
+
+/* ============================================================
+   Focus / Pomodoro sessions
+   ============================================================ */
+let focusState = null; // { sessionId, plannedMinutes, secondsRemaining, paused, intervalId, label }
+
+async function loadFocusTab(){
+  const subjectSelect = document.getElementById('focus-subject-select');
+  subjectSelect.innerHTML = '<option value="">None / custom label</option>';
+  try{
+    const res = await fetch(`${API}/api/subjects`);
+    const subs = await res.json();
+    subs.forEach(s=>{
+      const opt = document.createElement('option'); opt.value = s.id; opt.textContent = s.name;
+      subjectSelect.appendChild(opt);
+    });
+  }catch(e){}
+
+  document.querySelectorAll('.focus-preset').forEach(btn=>{
+    btn.onclick = () => {
+      document.querySelectorAll('.focus-preset').forEach(b=>b.classList.remove('mode-active'));
+      btn.classList.add('mode-active');
+      document.getElementById('focus-custom-mins').value = '';
+      btn.dataset.selected = 'true';
+      document.querySelectorAll('.focus-preset').forEach(b=>{ if(b!==btn) delete b.dataset.selected; });
+    };
+  });
+
+  await renderFocusSessionList();
+
+  // If a session is already active (e.g. user switched tabs mid-session), keep showing it.
+  if(focusState){
+    document.getElementById('focus-idle-card').style.display = 'none';
+    document.getElementById('focus-active-card').style.display = 'block';
+  } else {
+    document.getElementById('focus-idle-card').style.display = 'block';
+    document.getElementById('focus-active-card').style.display = 'none';
+  }
+}
+
+async function startFocusSession(){
+  const subjectSelect = document.getElementById('focus-subject-select');
+  const subjectId = subjectSelect.value ? parseInt(subjectSelect.value,10) : null;
+  const label = document.getElementById('focus-label-input').value.trim();
+  const customMins = parseInt(document.getElementById('focus-custom-mins').value,10);
+  const presetBtn = document.querySelector('.focus-preset[data-selected="true"]');
+  const plannedMinutes = customMins || (presetBtn ? parseInt(presetBtn.dataset.mins,10) : 25);
+
+  const res = await fetch(`${API}/api/study-sessions`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ subject_id: subjectId, label: label || null, planned_minutes: plannedMinutes })
+  });
+  const session = await res.json();
+
+  const subjectName = subjectId ? subjectSelect.options[subjectSelect.selectedIndex].textContent : null;
+  const displayLabel = subjectName || label || 'Focus session';
+
+  focusState = {
+    sessionId: session.id,
+    plannedMinutes,
+    secondsRemaining: plannedMinutes*60,
+    secondsElapsed: 0,
+    paused: false,
+    label: displayLabel,
+  };
+
+  document.getElementById('focus-active-title').textContent = displayLabel;
+  document.getElementById('focus-timer-sub').textContent = `Planned: ${plannedMinutes} min`;
+  document.getElementById('focus-idle-card').style.display = 'none';
+  document.getElementById('focus-active-card').style.display = 'block';
+  document.getElementById('focus-pause-btn').textContent = '\u23F8 Pause';
+
+  runFocusTimer();
+}
+
+function runFocusTimer(){
+  if(focusState.intervalId) clearInterval(focusState.intervalId);
+  focusState.intervalId = setInterval(()=>{
+    if(focusState.paused) return;
+    focusState.secondsRemaining -= 1;
+    focusState.secondsElapsed += 1;
+    updateFocusDisplay();
+    if(focusState.secondsRemaining <= 0){
+      updateFocusDisplay();
+      // Auto-stops counting down at 0 but does NOT auto-finish — user decides
+      // whether to Finish now or keep going past the planned time (overrun
+      // shows as a growing "+X min over" instead of just stopping silently).
+    }
+  }, 1000);
+}
+
+function updateFocusDisplay(){
+  const remaining = focusState.secondsRemaining;
+  const display = document.getElementById('focus-timer-display');
+  if(remaining >= 0){
+    const m = Math.floor(remaining/60), s = remaining%60;
+    display.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    display.style.color = 'var(--navy)';
+  } else {
+    const over = Math.abs(remaining);
+    const m = Math.floor(over/60), s = over%60;
+    display.textContent = `+${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    display.style.color = 'var(--pink-deep)';
+  }
+}
+
+function togglePauseFocus(){
+  if(!focusState) return;
+  focusState.paused = !focusState.paused;
+  document.getElementById('focus-pause-btn').textContent = focusState.paused ? '\u25B6 Resume' : '\u23F8 Pause';
+}
+
+async function finishFocusSession(status){
+  if(!focusState) return;
+  clearInterval(focusState.intervalId);
+  const actualMinutes = Math.max(1, Math.round(focusState.secondsElapsed/60));
+
+  await fetch(`${API}/api/study-sessions/${focusState.sessionId}/finish`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ actual_minutes: actualMinutes, status })
+  });
+
+  focusState = null;
+  document.getElementById('focus-idle-card').style.display = 'block';
+  document.getElementById('focus-active-card').style.display = 'none';
+  document.getElementById('focus-label-input').value = '';
+  document.getElementById('focus-custom-mins').value = '';
+  document.querySelectorAll('.focus-preset').forEach(b=>{ b.classList.remove('mode-active'); delete b.dataset.selected; });
+
+  await renderFocusSessionList();
+  loadToday();
+}
+
+async function renderFocusSessionList(){
+  const list = document.getElementById('focus-session-list');
+  list.innerHTML = '<li class="hd">Loading...</li>';
+  try{
+    const res = await fetch(`${API}/api/study-sessions?days=14`);
+    const sessions = await res.json();
+    list.innerHTML = '';
+    if(sessions.length === 0){
+      list.innerHTML = '<li class="hd">No sessions yet \u2014 start one above.</li>';
+      return;
+    }
+    sessions.forEach(s=>{
+      const li = document.createElement('li');
+      const dt = new Date(s.start_time);
+      const dateStr = dt.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+      const statusLabel = s.status === 'completed' ? `${s.actual_minutes} min` : s.status === 'abandoned' ? `${s.actual_minutes||0} min (abandoned)` : 'in progress';
+      li.innerHTML = `<span class="hd">${escapeHtml(s.label || 'Focus session')} &middot; ${dateStr}</span><span class="hc">${statusLabel}</span>`;
+      list.appendChild(li);
+    });
+  }catch(e){
+    list.innerHTML = '<li class="hd">Could not load sessions.</li>';
+  }
+}
+
+/* ============================================================
+   Goals
+   ============================================================ */
+let goalsData = [];
+let editingGoalId = null;
+
+async function loadGoalsTab(){
+  const grid = document.getElementById('goals-grid');
+  grid.innerHTML = '<div class="topic-empty">Loading...</div>';
+  try{
+    const res = await fetch(`${API}/api/goals`);
+    goalsData = await res.json();
+  }catch(e){ goalsData = []; }
+  renderGoals();
+}
+
+function goalProgressPct(goal){
+  if(goal.target_value <= 0) return 0;
+  return Math.min(100, Math.round((goal.current_value / goal.target_value)*100));
+}
+
+function renderGoals(){
+  const grid = document.getElementById('goals-grid');
+  grid.innerHTML = '';
+  if(goalsData.length === 0){
+    grid.innerHTML = `<div style="grid-column:1/-1;" onclick="openGoalModal()">${mascotEmptyState('sleepy', 'No goals yet &mdash; tap to add one', '<button class="pill pill-teal" style="margin-top:10px;" onclick="openGoalModal()">+ Add Goal</button>')}</div>`;
+    return;
+  }
+  goalsData.forEach(goal=>{
+    const pct = goalProgressPct(goal);
+    const card = document.createElement('div');
+    card.className = 'subject-card';
+    card.style.cursor = 'pointer';
+
+    const priorityColor = goal.priority==='high' ? '#E86FAE' : goal.priority==='low' ? '#94A3B8' : '#5B9BF0';
+    const head = document.createElement('div');
+    head.className = 'subject-head';
+    head.style.background = goal.completed ? '#34A374' : priorityColor;
+    const deadlineStr = goal.deadline ? new Date(goal.deadline+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'}) : '';
+    head.innerHTML = `
+      <h3>${goal.completed ? '\u2713 ' : ''}${escapeHtml(goal.title)}</h3>
+      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
+      <div class="mini-label">${goal.current_value}${goal.unit?(' '+goal.unit):''} / ${goal.target_value}${goal.unit?(' '+goal.unit):''} (${pct}%)${deadlineStr ? ' &middot; due '+deadlineStr : ''}</div>
+    `;
+    head.addEventListener('click', ()=>openGoalModal(goal.id));
+    card.appendChild(head);
+
+    if(goal.description){
+      const body = document.createElement('div');
+      body.className = 'subject-body';
+      body.innerHTML = `<p class="sub" style="margin:0;">${escapeHtml(goal.description)}</p>`;
+      card.appendChild(body);
+    }
+
+    grid.appendChild(card);
+  });
+}
+
+function openGoalModal(goalId){
+  const title = document.getElementById('goal-modal-title');
+  const titleInput = document.getElementById('goal-title-input');
+  const descInput = document.getElementById('goal-desc-input');
+  const typeInput = document.getElementById('goal-type-input');
+  const subjectRow = document.getElementById('goal-subject-row');
+  const subjectInput = document.getElementById('goal-subject-input');
+  const targetInput = document.getElementById('goal-target-input');
+  const targetLabel = document.getElementById('goal-target-label');
+  const deadlineInput = document.getElementById('goal-deadline-input');
+  const periodInput = document.getElementById('goal-period-input');
+  const priorityInput = document.getElementById('goal-priority-input');
+  const delBtn = document.getElementById('goal-delete-btn');
+
+  // populate subject dropdown
+  fetch(`${API}/api/subjects`).then(r=>r.json()).then(subs=>{
+    subjectInput.innerHTML = '';
+    subs.forEach(s=>{
+      const opt = document.createElement('option'); opt.value=s.id; opt.textContent=s.name;
+      subjectInput.appendChild(opt);
+    });
+  });
+
+  typeInput.onchange = () => {
+    subjectRow.style.display = typeInput.value === 'subject_complete' ? 'block' : 'none';
+    targetLabel.textContent = typeInput.value==='study_hours' ? 'Target (hours)' : typeInput.value==='tasks_completed' ? 'Target (# tasks)' : typeInput.value==='subject_complete' ? 'Target (# topics)' : 'Target';
+  };
+
+  if(goalId){
+    editingGoalId = goalId;
+    const goal = goalsData.find(g=>g.id===goalId);
+    title.textContent = 'Edit Goal';
+    titleInput.value = goal.title;
+    descInput.value = goal.description || '';
+    typeInput.value = goal.goal_type;
+    typeInput.disabled = true; // changing type after creation would desync auto-tracking; keep simple
+    subjectRow.style.display = goal.goal_type==='subject_complete' ? 'block' : 'none';
+    targetInput.value = goal.target_value;
+    targetLabel.textContent = goal.goal_type==='study_hours' ? 'Target (hours)' : goal.goal_type==='tasks_completed' ? 'Target (# tasks)' : goal.goal_type==='subject_complete' ? 'Target (# topics)' : 'Target';
+    deadlineInput.value = goal.deadline || '';
+    periodInput.value = goal.period;
+    priorityInput.value = goal.priority;
+    delBtn.style.display = 'inline-block';
+  } else {
+    editingGoalId = null;
+    title.textContent = 'Add Goal';
+    titleInput.value = ''; descInput.value = '';
+    typeInput.value = 'study_hours'; typeInput.disabled = false;
+    subjectRow.style.display = 'none';
+    targetInput.value = ''; targetLabel.textContent = 'Target (hours)';
+    deadlineInput.value = '';
+    periodInput.value = 'custom';
+    priorityInput.value = 'medium';
+    delBtn.style.display = 'none';
+  }
+  document.getElementById('goal-overlay').classList.add('show');
+  setTimeout(()=>titleInput.focus(), 50);
+}
+function closeGoalModal(){ document.getElementById('goal-overlay').classList.remove('show'); }
+
+async function saveGoal(){
+  const title = document.getElementById('goal-title-input').value.trim();
+  if(!title) return;
+  const description = document.getElementById('goal-desc-input').value.trim() || null;
+  const goal_type = document.getElementById('goal-type-input').value;
+  const subject_id = goal_type==='subject_complete' ? parseInt(document.getElementById('goal-subject-input').value,10) : null;
+  const target_value = parseFloat(document.getElementById('goal-target-input').value) || 1;
+  const deadline = document.getElementById('goal-deadline-input').value || null;
+  const period = document.getElementById('goal-period-input').value;
+  const priority = document.getElementById('goal-priority-input').value;
+  const unit = goal_type==='study_hours' ? 'hours' : goal_type==='tasks_completed' ? 'tasks' : goal_type==='subject_complete' ? 'topics' : '';
+
+  if(editingGoalId){
+    await fetch(`${API}/api/goals/${editingGoalId}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ title, description, target_value, deadline, priority })
+    });
+  } else {
+    await fetch(`${API}/api/goals`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ title, description, goal_type, period, subject_id, target_value, unit, deadline, priority })
+    });
+  }
+  closeGoalModal();
+  loadGoalsTab();
+}
+async function deleteGoal(){
+  if(editingGoalId){ await fetch(`${API}/api/goals/${editingGoalId}`, {method:'DELETE'}); }
+  closeGoalModal();
+  loadGoalsTab();
+}
+
+/* ============================================================
+   Analytics
+   ============================================================ */
+function formatMinutes(mins){
+  const h = Math.floor(mins/60), m = mins%60;
+  if(h===0) return `${m}m`;
+  return `${h}h ${m}m`;
+}
+
+async function loadAnalyticsTab(){
+  let data;
+  try{
+    const res = await fetch(`${API}/api/analytics?days=30`);
+    data = await res.json();
+  }catch(e){
+    document.getElementById('an-highlights').textContent = 'Could not load analytics.';
+    return;
+  }
+
+  document.getElementById('an-total-time').textContent = formatMinutes(data.total_study_minutes);
+  const weekTotal = Object.entries(data.study_time_by_day)
+    .filter(([d]) => (new Date() - new Date(d+'T00:00:00')) <= 7*86400000)
+    .reduce((sum,[,m])=>sum+m, 0);
+  document.getElementById('an-week-time').textContent = formatMinutes(weekTotal);
+  document.getElementById('an-tasks').textContent = data.tasks_completed_count;
+  document.getElementById('an-topics').textContent = data.topics_completed_count;
+  document.getElementById('an-streak').textContent = data.current_streak + ' days';
+  document.getElementById('an-longest').textContent = data.longest_streak_in_window + ' days';
+
+  const highlights = [];
+  if(data.most_studied_subject) highlights.push(`Most studied: <strong>${escapeHtml(data.most_studied_subject)}</strong>`);
+  if(data.most_productive_day){
+    const d = new Date(data.most_productive_day+'T00:00:00');
+    highlights.push(`Most productive day: <strong>${d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'})}</strong>`);
+  }
+  if(data.most_productive_hour !== null && data.most_productive_hour !== undefined){
+    highlights.push(`Most productive time: <strong>${hourLabel(data.most_productive_hour)}</strong>`);
+  }
+  if(data.subject_needing_attention) highlights.push(`Needs attention: <strong>${escapeHtml(data.subject_needing_attention)}</strong>`);
+  document.getElementById('an-highlights').innerHTML = highlights.length ? highlights.join(' &middot; ') : 'Not enough data yet for highlights.';
+
+  drawBarChart('an-chart-day', Object.entries(data.study_time_by_day).sort((a,b)=>a[0].localeCompare(b[0])).map(([d,m])=>({
+    label: new Date(d+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'}), value: m, color:'#5B9BF0'
+  })), 'min');
+
+  drawBarChart('an-chart-subject', Object.entries(data.study_time_by_subject).sort((a,b)=>b[1]-a[1]).map(([name,m],i)=>({
+    label: name, value: m, color: PALETTE[i % PALETTE.length]
+  })), 'min');
+
+  const pvaEntries = Object.entries(data.planned_vs_actual_by_day).sort((a,b)=>a[0].localeCompare(b[0]));
+  drawGroupedBarChart('an-chart-planned', pvaEntries.map(([d,v])=>({
+    label: new Date(d+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'}),
+    a: v.planned, b: v.actual
+  })), '#C4B5FD', '#5B9BF0');
+}
+
+function drawBarChart(svgId, items, unit){
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  if(items.length === 0){
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x','50%'); t.setAttribute('y','50%'); t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','#94A3B8'); t.setAttribute('font-size','13');
+    t.textContent = 'Not enough data yet.';
+    svg.appendChild(t);
+    return;
+  }
+  const width = Math.max(svg.clientWidth || 600, items.length*50);
+  const height = 180;
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('width', width);
+  const padding = { top:16, right:16, bottom:32, left:16 };
+  const plotW = width - padding.left - padding.right;
+  const plotH = height - padding.top - padding.bottom;
+  const maxVal = Math.max(...items.map(i=>i.value), 1);
+  const barW = Math.min(40, plotW/items.length - 8);
+  const ns = 'http://www.w3.org/2000/svg';
+
+  items.forEach((item,i)=>{
+    const slotW = plotW/items.length;
+    const x = padding.left + i*slotW + (slotW-barW)/2;
+    const barH = (item.value/maxVal) * plotH;
+    const y = padding.top + plotH - barH;
+    const rect = document.createElementNS(ns,'rect');
+    rect.setAttribute('x',x); rect.setAttribute('y',y); rect.setAttribute('width',barW); rect.setAttribute('height',Math.max(barH,2));
+    rect.setAttribute('fill', item.color); rect.setAttribute('rx','3');
+    const title = document.createElementNS(ns,'title');
+    title.textContent = `${item.label}: ${item.value}${unit}`;
+    rect.appendChild(title);
+    svg.appendChild(rect);
+
+    const label = document.createElementNS(ns,'text');
+    label.setAttribute('x', x+barW/2); label.setAttribute('y', height-14);
+    label.setAttribute('text-anchor','middle'); label.setAttribute('font-size','9'); label.setAttribute('fill','#64748B');
+    label.textContent = item.label;
+    svg.appendChild(label);
+  });
+}
+
+function drawGroupedBarChart(svgId, items, colorA, colorB){
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  if(items.length === 0){
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x','50%'); t.setAttribute('y','50%'); t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','#94A3B8'); t.setAttribute('font-size','13');
+    t.textContent = 'Not enough data yet.';
+    svg.appendChild(t);
+    return;
+  }
+  const width = Math.max(svg.clientWidth || 600, items.length*60);
+  const height = 180;
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('width', width);
+  const padding = { top:16, right:16, bottom:32, left:16 };
+  const plotW = width - padding.left - padding.right;
+  const plotH = height - padding.top - padding.bottom;
+  const maxVal = Math.max(...items.flatMap(i=>[i.a,i.b]), 1);
+  const ns = 'http://www.w3.org/2000/svg';
+  const slotW = plotW/items.length;
+  const barW = Math.min(18, slotW/2 - 4);
+
+  items.forEach((item,i)=>{
+    const slotX = padding.left + i*slotW;
+    [['a',colorA],['b',colorB]].forEach(([key,color],j)=>{
+      const val = item[key];
+      const barH = (val/maxVal) * plotH;
+      const x = slotX + slotW/2 - barW - 2 + j*(barW+4);
+      const y = padding.top + plotH - barH;
+      const rect = document.createElementNS(ns,'rect');
+      rect.setAttribute('x',x); rect.setAttribute('y',y); rect.setAttribute('width',barW); rect.setAttribute('height',Math.max(barH,1));
+      rect.setAttribute('fill', color); rect.setAttribute('rx','2');
+      const title = document.createElementNS(ns,'title');
+      title.textContent = `${item.label} ${key==='a'?'planned':'actual'}: ${val}min`;
+      rect.appendChild(title);
+      svg.appendChild(rect);
+    });
+    const label = document.createElementNS(ns,'text');
+    label.setAttribute('x', slotX+slotW/2); label.setAttribute('y', height-14);
+    label.setAttribute('text-anchor','middle'); label.setAttribute('font-size','9'); label.setAttribute('fill','#64748B');
+    label.textContent = item.label;
+    svg.appendChild(label);
+  });
+}
 
 /* ============================================================
    Weight Tracker — BMI / BMR / calorie / protein math.
@@ -2076,6 +2982,7 @@ async function loadToday(){
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   document.getElementById('today-greeting').textContent = greeting;
   document.getElementById('today-date').textContent = now.toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+  document.getElementById('today-mascot').innerHTML = mascotSVG('idle', 56);
 
   const todayISO = fmtISO(now);
   let todayEvents = [];
@@ -2090,6 +2997,10 @@ async function loadToday(){
   const pct = total ? Math.round((done/total)*100) : 0;
   document.getElementById('today-progress-fill').style.width = pct+'%';
   document.getElementById('today-progress-label').textContent = `${done} / ${total} tasks (${pct}%)`;
+
+  // Mascot mood reflects today's actual progress
+  const mascotMood = total > 0 && done === total ? 'happy' : total === 0 ? 'sleepy' : 'idle';
+  document.getElementById('today-mascot').innerHTML = mascotSVG(mascotMood, 56);
 
   const plannedHours = todayEvents.reduce((sum,e)=>sum+(e.end_hour-e.start_hour+1),0);
   const doneHours = todayEvents.filter(e=>e.done).reduce((sum,e)=>sum+(e.end_hour-e.start_hour+1),0);
@@ -2130,6 +3041,10 @@ async function loadToday(){
       cursor.setDate(cursor.getDate()-1);
     }
     document.getElementById('today-streak').textContent = `\u{1F525} ${streak}-day streak`;
+    // A streak of 3+ takes priority over today's task-based mood — worth celebrating.
+    if(streak >= 3){
+      document.getElementById('today-mascot').innerHTML = mascotSVG('celebrating', 56);
+    }
   }catch(e){
     document.getElementById('today-streak').textContent = '\u{1F525} \u2013';
   }
@@ -2248,6 +3163,7 @@ async function importBulkSyllabus(){
 
 document.getElementById('mode-week-btn').className = 'pill mode-active';
 document.getElementById('mode-month-btn').className = 'pill mode-inactive';
+document.getElementById('header-mascot').innerHTML = mascotSVG('idle', 36);
 loadWeek();
 loadSubjects();
 loadToday();
