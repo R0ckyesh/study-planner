@@ -150,3 +150,39 @@ class WeightProfileOut(BaseModel):
 
     class Config:
         from_attributes = True
+class GoalCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    goal_type: str = "custom"
+    period: str = "custom"
+    subject_id: Optional[int] = None
+    target_value: float = 1
+    unit: str = ""
+    deadline: Optional[Date] = None
+    priority: str = "medium"
+
+
+class GoalUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    target_value: Optional[float] = None
+    deadline: Optional[Date] = None
+    priority: Optional[str] = None
+
+
+class GoalOut(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    goal_type: str
+    period: str
+    subject_id: Optional[int] = None
+    target_value: float
+    unit: str
+    deadline: Optional[Date] = None
+    priority: str
+    current_value: float
+    completed: bool
+
+    class Config:
+        from_attributes = True

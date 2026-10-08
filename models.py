@@ -104,3 +104,31 @@ class WeightProfile(Base):
     target_weight_kg = Column(Float, nullable=True)
     deficit_level = Column(String, default="standard")  # gentle|standard|faster
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+class Goal(Base):
+    """A study goal tracked automatically from planner data."""
+    __tablename__ = "goals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+
+    # study_hours | tasks_completed | subject_complete
+    goal_type = Column(String, nullable=False)
+
+    # weekly | monthly | custom
+    period = Column(String, default="custom")
+
+    # Only used for subject_complete goals
+    subject_id = Column(Integer, ForeignKey("subjects.id"), nullable=True)
+
+    target_value = Column(Float, nullable=False, default=1)
+    unit = Column(String, nullable=True)
+
+    deadline = Column(Date, nullable=True)
+    priority = Column(String, default="medium")
+
+    # Calculated automatically when goals are loaded
+    current_value = Column(Float, default=0)
+    completed = Column(Boolean, default=False)
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)

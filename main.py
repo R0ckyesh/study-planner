@@ -501,6 +501,151 @@ def toggle_routine_skip(item_id: int, payload: schemas.RoutineSkipCreate, db: Se
     db.commit()
     return {"skipped": True}
 
+# ============================================================
+# Goals
+# ============================================================
+
+def calculate_goal_progress(goal, db):
+    """Calculate current progress from existing study data."""
+
+    today = datetime.date.today()
+
+    if goal.period == "weekly":
+        start_date = today - datetime.timedelta(days=today.weekday())
+    elif goal.period == "monthly":
+        start_date = today.replace(day=1)
+    else:
+        start_date = None
+
+    if goal.goal_type == "study_hours":
+        query = db.query(
+            func.sum(models.PlannerEvent.end_hour - models.PlannerEvent.start_hour)
+        ).filter(models.PlannerEvent.done == True)
+
+        if start_date:
+            query = query.filter(models.PlannerEvent.date >= start_date)
+
+        current = query.scalar() or 0
+
+    elif goal.goal_type == "tasks_completed":
+        query = db.query(func.count(models.PlannerEvent.id)).filter(
+            models.PlannerEvent.done == True
+        )
+
+        if start_date:
+            query = query.filter(models.PlannerEvent.date >= start_date)
+
+        current = query.scalar() or 0
+
+    elif goal.goal_type == "subject_complete":
+        query = db.query(func.count(models.Topic.id)).filter(
+            models.Topic.done == True
+        )
+
+        if goal.subject_id:
+            query = query.filter(models.Topic.subject_id == goal.subject_id)
+
+        if start_date:
+            query = query.filter(
+                models.Topic.completed_at >= datetime.datetime.combine(
+                    start_date, datetime.time.min
+                )
+            )
+
+        current = query.scalar() or 0
+
+    else:
+        current = goal.current_value or 0
+
+    goal.current_value = float(current)
+    goal.completed = goal.current_value >= goal.target_value
+
+    return goal
+
+
+@app.get("/api/goals", response_model=List[schemas.GoalOut])
+def list_goals(db: Session = Depends(get_db)):
+    goals = db.query(models.Goal).order_by(models.Goal.created_at.desc()).all()
+
+    for goal in goals:
+        calculate_goal_progress(goal, db)
+
+    db.commit()
+
+    return goals
+
+
+@app.post("/api/goals", response_model=schemas.GoalOut)
+def create_goal(payload: schemas.GoalCreate, db: Session = Depends(get_db)):
+    if not payload.title.strip():
+        raise HTTPException(400, "Goal title cannot be empty")
+
+    if payload.target_value <= 0:
+        raise HTTPException(400, "Target must be greater than zero")
+
+    goal = models.Goal(
+        title=payload.title.strip(),
+        description=payload.description,
+        goal_type=payload.goal_type,
+        period=payload.period,
+        subject_id=payload.subject_id,
+        target_value=payload.target_value,
+        unit=payload.unit or "",
+        deadline=payload.deadline,
+        priority=payload.priority,
+        current_value=0,
+        completed=False,
+    )
+
+    db.add(goal)
+    db.commit()
+    db.refresh(goal)
+
+    calculate_goal_progress(goal, db)
+    db.commit()
+    db.refresh(goal)
+
+    return goal
+
+
+@app.put("/api/goals/{goal_id}", response_model=schemas.GoalOut)
+def update_goal(
+    goal_id: int,
+    payload: schemas.GoalUpdate,
+    db: Session = Depends(get_db),
+):
+    goal = db.get(models.Goal, goal_id)
+
+    if not goal:
+        raise HTTPException(404, "Goal not found")
+
+    data = payload.dict(exclude_unset=True)
+
+    for key, value in data.items():
+        setattr(goal, key, value)
+
+    if goal.target_value <= 0:
+        raise HTTPException(400, "Target must be greater than zero")
+
+    calculate_goal_progress(goal, db)
+
+    db.commit()
+    db.refresh(goal)
+
+    return goal
+
+
+@app.delete("/api/goals/{goal_id}")
+def delete_goal(goal_id: int, db: Session = Depends(get_db)):
+    goal = db.get(models.Goal, goal_id)
+
+    if not goal:
+        raise HTTPException(404, "Goal not found")
+
+    db.delete(goal)
+    db.commit()
+
+    return {"ok": True}
 
 # ============================================================
 # Weight tracking (entries + profile inputs for BMI/calorie/protein math)
